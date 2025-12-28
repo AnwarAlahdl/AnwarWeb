@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نظام العدادات الاحترافي | النسخة الكاملة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --p-color: #6366f1; --bg: #f8fafc; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; transition: 0.3s; }
+        header { background: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 500px; margin: 50px auto; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .btn { background: var(--p-color); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .counter-card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-right: 5px solid var(--p-color); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .hidden { display: none; }
+        .controls { display: flex; gap: 10px; }
+        .num { font-size: 1.5rem; font-weight: bold; color: var(--p-color); min-width: 40px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div id="siteTitle" style="font-weight: bold; font-size: 1.2rem;">نظام العدادات الذكي</div>
+    <input type="color" id="colorPicker" onchange="updateColor(this.value)">
+</header>
+
+<div class="container">
+    <div id="authBox" class="card">
+        <h2 id="authTitle">إنشاء حساب جديد</h2>
+        <input type="email" id="userEmail" placeholder="البريد الإلكتروني">
+        <input type="password" id="userPass" placeholder="كلمة المرور">
+        <button class="btn" id="mainAuthBtn" onclick="handleAuth()">تأكيد</button>
+        <p id="toggleText" style="cursor:pointer; color: blue; font-size: 0.8rem; margin-top: 15px;" onclick="toggleAuthMode()">لديك حساب بالفعل؟ سجل دخولك</p>
+    </div>
+
+    <div id="2faBox" class="card hidden">
+        <h2>تحقق 2FA</h2>
+        <p>أدخل الكود (تجريبي: 1234)</p>
+        <input type="text" id="otpCode" placeholder="0 0 0 0" style="text-align: center; letter-spacing: 10px;">
+        <button class="btn" onclick="verifyOTP()">دخول</button>
+    </div>
+
+    <div id="dashBox" class="hidden">
+        <div class="card" style="margin-bottom: 20px;">
+            <h3>إضافة عداد</h3>
+            <input type="text" id="newCounterName" placeholder="اسم العداد">
+            <button class="btn" onclick="addNewCounter()">+ إضافة للقائمة</button>
+        </div>
+        <div id="countersList"></div>
+        <button class="btn" style="background: #ef4444;" onclick="logout()">تسجيل خروج</button>
+    </div>
+</div>
+
+<script>
+    let isLoginMode = false;
+    let currentUser = null;
+
+    // تحميل الإعدادات عند فتح الصفحة
+    window.onload = () => {
+        const savedColor = localStorage.getItem('themeColor');
+        if (savedColor) updateColor(savedColor);
+    };
+
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('authTitle').innerText = isLoginMode ? "تسجيل الدخول" : "إنشاء حساب جديد";
+        document.getElementById('toggleText').innerText = isLoginMode ? "ليس لديك حساب؟ أنشئ واحداً" : "لديك حساب بالفعل؟ سجل دخولك";
+    }
+
+    function handleAuth() {
+        const email = document.getElementById('userEmail').value;
+        const pass = document.getElementById('userPass').value;
+        
+        if(!email || !pass) return alert("أدخل البيانات");
+
+        if (!isLoginMode) { // إنشاء حساب
+            localStorage.setItem('user_' + email, JSON.stringify({ email, pass, counters: [] }));
+            alert("تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.");
+            toggleAuthMode();
+        } else { // تسجيل دخول
+            const storedUser = JSON.parse(localStorage.getItem('user_' + email));
+            if (storedUser && storedUser.pass === pass) {
+                currentUser = storedUser;
+                document.getElementById('authBox').classList.add('hidden');
+                document.getElementById('2faBox').classList.remove('hidden');
+            } else {
+                alert("بيانات خاطئة!");
+            }
+        }
+    }
+
+    function verifyOTP() {
+        if(document.getElementById('otpCode').value === "1234") {
+            document.getElementById('2faBox').classList.add('hidden');
+            document.getElementById('dashBox').classList.remove('hidden');
+            renderCounters();
+        } else { alert("كود خاطئ (استخدم 1234)"); }
+    }
+
+    function updateColor(color) {
+        document.documentElement.style.setProperty('--p-color', color);
+        localStorage.setItem('themeColor', color);
+    }
+
+    function addNewCounter() {
+        const name = document.getElementById('newCounterName').value;
+        if(!name) return;
+        currentUser.counters.push({ name: name, value: 0 });
+        saveAndRefresh();
+        document.getElementById('newCounterName').value = "";
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('user_' + currentUser.email, JSON.stringify(currentUser));
+        renderCounters();
+    }
+
+    function renderCounters() {
+        const list = document.getElementById('countersList');
+        list.innerHTML = "";
+        currentUser.counters.forEach((c, index) => {
+            list.innerHTML += `
+                <div class="counter-card">
+                    <input type="text" value="${c.name}" onchange="updateCounterName(${index}, this.value)" style="border:none; width:150px; font-weight:bold;">
+                    <div class="controls">
+                        <button onclick="changeVal(${index}, -1)">-</button>
+                        <span class="num">${c.value}</span>
+                        <button onclick="changeVal(${index}, 1)">+</button>
+                        <button onclick="deleteCounter(${index})" style="color:red; margin-right:10px;">X</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function changeVal(index, amt) {
+        currentUser.counters[index].value += amt;
+        saveAndRefresh();
+    }
+
+    function updateCounterName(index, newName) {
+        currentUser.counters[index].name = newName;
+        saveAndRefresh();
+    }
+
+    function deleteCounter(index) {
+        currentUser.counters.splice(index, 1);
+        saveAndRefresh();
+    }
+
+    function logout() { location.reload(); }
+</script>
+</body>
+</html>

@@ -9,9 +9,8 @@
         :root { --bg: #0f172a; --card: #1e293b; --primary: #6366f1; --text: #f8fafc; --border: #334155; --success: #10b981; --danger: #ef4444; --admin: #f59e0b; }
         body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
         
-        /* الهيدر والقائمة */
         header { background: var(--card); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
-        .hamburger { font-size: 28px; cursor: pointer; color: var(--primary); display: none; }
+        .hamburger { font-size: 28px; cursor: pointer; color: var(--primary); display: block; }
         .sidebar { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: var(--card); transition: 0.4s ease; z-index: 2000; padding-top: 60px; box-shadow: -10px 0 20px rgba(0,0,0,0.5); }
         .sidebar.open { right: 0; }
         .sidebar-item { padding: 15px 25px; cursor: pointer; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; align-items: center; gap: 10px; }
@@ -28,19 +27,19 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
 
-        /* العدادات (عدادين في السطر) */
         .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .counter-item { background: var(--card); padding: 15px; border-radius: 20px; border: 2px solid var(--border); text-align: center; position: relative; }
         .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
         .c-btns { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 10px 0; }
         .c-btn { width: 35px; height: 35px; border-radius: 10px; border: none; font-weight: 900; cursor: pointer; background: #334155; color: white; }
 
-        /* الجداول */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+        .setting-row b { color: var(--primary); }
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; overflow: hidden; font-size: 0.8rem; }
         th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); }
         th { background: var(--primary); color: white; }
 
-        /* نظام التنبيهات */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid var(--border); }
         
@@ -86,7 +85,6 @@
             </label>
             <button class="btn btn-primary" onclick="tryLogin()">دخول</button>
             <button class="btn" style="background:none; color:var(--primary)" onclick="toggleAuth(true)">إنشاء حساب</button>
-            <button class="btn" style="background:none; color:var(--text); font-size:0.7rem; opacity:0.6" onclick="forgotPass()">نسيت كلمة المرور؟</button>
         </div>
 
         <div class="card hidden" id="regBox">
@@ -103,9 +101,8 @@
     <div id="twoFAPage" class="section">
         <div class="card" style="text-align: center;">
             <h2>التحقق 🛡️</h2>
-            <p style="font-size:0.8rem">أدخل الرمز العشوائي</p>
             <div id="captchaBox" style="font-size: 2rem; font-weight: 900; color: var(--primary); letter-spacing: 5px; margin: 15px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px;"></div>
-            <input type="text" id="captchaIn" placeholder="اكتب الرمز هنا" style="text-align: center;">
+            <input type="text" id="captchaIn" placeholder="اكتب الرمز" style="text-align: center;">
             <button class="btn btn-primary" onclick="verify2FA()">دخول</button>
         </div>
     </div>
@@ -118,14 +115,14 @@
             <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
         </div>
         <div class="counters-grid" id="cList"></div>
-        <button class="btn btn-success" style="margin-top:20px" onclick="transferStats()">نقل للإحصائيات ➡️</button>
+        <button class="btn btn-success" style="margin-top:20px" onclick="transferStats()">نقل للإحصائيات وتصفير ➡️</button>
     </div>
 
     <div id="notesPage" class="section">
         <div class="card">
-            <h3>📝 ملاحظة TXT</h3>
-            <textarea id="ntIn" placeholder="اكتب ملاحظتك (سيتم حفظها كنص خام)..." rows="4"></textarea>
-            <button class="btn btn-primary" onclick="addNote()">حفظ</button>
+            <h3>📝 ملاحظة جديدة</h3>
+            <textarea id="ntIn" placeholder="اكتب ملاحظتك هنا..." rows="4"></textarea>
+            <button class="btn btn-primary" onclick="addNote()">حفظ الملاحظة</button>
         </div>
         <div id="nList"></div>
     </div>
@@ -137,15 +134,19 @@
 
     <div id="settingsPage" class="section">
         <div class="card">
-            <h3>⚙️ الإعدادات</h3>
-            <div id="accInfo" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:15px; font-size:0.8rem"></div>
+            <h3>⚙️ الإعدادات الحالية</h3>
+            <div id="accDetails">
+                <div class="setting-row"><span>اليوزر:</span> <b id="dispU">-</b></div>
+                <div class="setting-row"><span>الإيميل:</span> <b id="dispE">-</b></div>
+                <div class="setting-row"><span>الرمز:</span> <b id="dispS">-</b></div>
+            </div>
+            <hr style="border:0.1px solid var(--border); margin:20px 0">
+            <h3>تعديل البيانات</h3>
             <input type="text" id="eU" placeholder="يوزر جديد">
             <input type="email" id="eE" placeholder="إيميل جديد">
-            <input type="password" id="eP" placeholder="باسوورد جديد">
-            <input type="text" id="eSec" placeholder="رمز 2FA المخصص">
-            <button class="btn btn-primary" onclick="updateProfile()">تحديث</button>
-            <hr style="border:0.1px solid var(--border); margin:15px 0">
-            <button class="btn btn-danger" onclick="confirmDelAcc()">حذف الحساب</button>
+            <input type="text" id="eSec" placeholder="رمز 2FA جديد">
+            <button class="btn btn-primary" onclick="updateProfile()">تحديث المعلومات</button>
+            <button class="btn btn-danger" style="margin-top:10px" onclick="confirmDelAcc()">حذف الحساب</button>
         </div>
     </div>
 
@@ -153,8 +154,8 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -171,9 +172,25 @@
 
     let curUser = null;
     let tempCode = "";
-    let listeners = [];
 
-    // --- نظام التنبيهات المخصص ---
+    // --- الربط بالنافذة Global ---
+    window.nav = (id) => {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id + 'Page').classList.add('active');
+        if(document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
+        if(id === 'settings') renderSettings();
+    };
+
+    window.toggleSidebar = () => {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+    };
+
+    window.toggleAuth = (reg) => {
+        document.getElementById('loginBox').classList.toggle('hidden', reg);
+        document.getElementById('regBox').classList.toggle('hidden', !reg);
+    };
+
     window.showAlert = (title, msg, type = 'ok', onConfirm = null) => {
         const modal = document.getElementById('sysModal');
         const btns = document.getElementById('sysBtns');
@@ -193,7 +210,7 @@
     };
     window.closeAlert = () => document.getElementById('sysModal').style.display = 'none';
 
-    // --- إدارة الجلسة ---
+    // --- نظام الدخول وتذكرني ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             curUser = user;
@@ -207,47 +224,30 @@
         }
     });
 
-    window.nav = (id) => {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id + 'Page').classList.add('active');
-        if(document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
-        if(id === 'settings') renderSettings();
-    };
-
-    window.toggleSidebar = () => {
-        document.getElementById('sidebar').classList.toggle('open');
-        document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
-    };
-
-    window.toggleAuth = (reg) => {
-        document.getElementById('loginBox').classList.toggle('hidden', reg);
-        document.getElementById('regBox').classList.toggle('hidden', !reg);
-    };
-
-    // --- تسجيل الدخول والإنشاء ---
-    window.handleReg = async () => {
-        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value, pc = document.getElementById('rPC').value;
-        if(p !== pc) return showAlert("خطأ", "كلمات المرور غير متطابقة");
-        try {
-            const res = await createUserWithEmailAndPassword(auth, e, p);
-            await setDoc(doc(db, "users", res.user.uid), { u, e, sec: "1234", createdAt: Date.now() });
-            showAlert("نجاح", "تم إنشاء الحساب بنجاح");
-            toggleAuth(false);
-        } catch (err) { showAlert("فشل", err.message); }
-    };
-
     window.tryLogin = async () => {
         const id = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
+        const remember = document.getElementById('remMe').checked;
         try {
+            await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
             let email = id;
             if(!id.includes('@')) {
                 const q = query(collection(db, "users"), where("u", "==", id));
                 const snap = await getDocs(q);
-                if(snap.empty) throw new Error("اليوزر نيم غير موجود");
+                if(snap.empty) throw new Error("المستخدم غير موجود");
                 email = snap.docs[0].data().e;
             }
             await signInWithEmailAndPassword(auth, email, p);
-        } catch (e) { showAlert("خطأ", "تأكد من البيانات"); }
+        } catch (e) { showAlert("خطأ", "بيانات الدخول غير صحيحة"); }
+    };
+
+    window.handleReg = async () => {
+        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value;
+        try {
+            const res = await createUserWithEmailAndPassword(auth, e, p);
+            await setDoc(doc(db, "users", res.user.uid), { u, e, sec: "1234", createdAt: Date.now() });
+            showAlert("نجاح", "تم إنشاء الحساب");
+            toggleAuth(false);
+        } catch (err) { showAlert("فشل", err.message); }
     };
 
     function start2FA() {
@@ -263,15 +263,7 @@
         } else showAlert("خطأ", "الرمز غير صحيح");
     };
 
-    window.logout = () => signOut(auth).then(() => location.reload());
-
-    window.forgotPass = async () => {
-        const id = document.getElementById('lUser').value;
-        if(!id) return showAlert("تنبيه", "اكتب الإيميل أو اليوزر نيم أولاً");
-        showAlert("استعادة الحساب", "تواصل مع الإدارة وزودهم برمز 2FA الخاص بك لاستعادة الحساب.");
-    };
-
-    // --- العدادات (Sub-collection) ---
+    // --- العدادات وتصفيرها ---
     window.addCounter = async () => {
         const n = document.getElementById('cn').value, g = document.getElementById('cg').value;
         if(!n || !g) return;
@@ -283,7 +275,31 @@
         await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
     };
 
-    // --- الملاحظات (TXT Mode) ---
+    window.transferStats = async () => {
+        const snap = await getDocs(collection(db, "users", curUser.uid, "counters"));
+        if(snap.empty) return;
+        
+        let data = [];
+        const batch = writeBatch(db);
+
+        snap.forEach(d => {
+            data.push(d.data());
+            // مشكلة 1: تصفير العدادات عند النقل
+            batch.update(doc(db, "users", curUser.uid, "counters", d.id), { c: 0 });
+        });
+        
+        await addDoc(collection(db, "users", curUser.uid, "stats"), {
+            title: "سجل يوم " + new Date().toLocaleDateString('ar-EG'),
+            date: new Date().toLocaleString('ar-EG'),
+            data: data,
+            createdAt: Date.now()
+        });
+        
+        await batch.commit();
+        showAlert("تم النقل", "تم حفظ الإحصائيات وتصفير جميع العدادات");
+    };
+
+    // --- الملاحظات (مع زر التعديل) ---
     window.addNote = async () => {
         const t = document.getElementById('ntIn').value;
         if(!t) return;
@@ -291,47 +307,36 @@
         document.getElementById('ntIn').value = '';
     };
 
-    // --- الإحصائيات وجدولة النقل ---
-    window.transferStats = async () => {
-        const snap = await getDocs(collection(db, "users", curUser.uid, "counters"));
-        if(snap.empty) return;
-        let data = [];
-        snap.forEach(d => data.push(d.data()));
-        
-        await addDoc(collection(db, "users", curUser.uid, "stats"), {
-            title: "سجل جديد",
-            date: new Date().toLocaleString('ar-EG'),
-            data: data,
-            createdAt: Date.now()
-        });
-        showAlert("تم", "نقل البيانات وتصفير العدادات");
+    // مشكلة 4: زر التعديل على الملاحظات
+    window.editNote = async (id, currentText) => {
+        const newText = prompt("تعديل الملاحظة:", currentText);
+        if (newText !== null && newText !== currentText) {
+            await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
+        }
     };
 
-    // --- الإعدادات ---
+    // --- الإعدادات (مشكلة 3) ---
     window.renderSettings = async () => {
         const d = await getDoc(doc(db, "users", curUser.uid));
         const data = d.data();
-        document.getElementById('accInfo').innerHTML = `يوزر: ${data.u} | إيميل: ${data.e} | رمز: ${data.sec}`;
+        document.getElementById('dispU').innerText = data.u;
+        document.getElementById('dispE').innerText = data.e;
+        document.getElementById('dispS').innerText = data.sec;
     };
 
     window.updateProfile = async () => {
         const u = document.getElementById('eU').value, e = document.getElementById('eE').value, s = document.getElementById('eSec').value;
         let up = {};
         if(u) up.u = u; if(e) up.e = e; if(s) up.sec = s;
+        if(Object.keys(up).length === 0) return;
         await updateDoc(doc(db, "users", curUser.uid), up);
-        showAlert("نجاح", "تم التحديث"); renderSettings();
+        showAlert("تم", "تم تحديث البيانات"); 
+        renderSettings();
+        document.getElementById('eU').value=''; document.getElementById('eE').value=''; document.getElementById('eSec').value='';
     };
 
-    window.confirmDelAcc = () => {
-        showAlert("🚨 حذف الحساب", "هل أنت متأكد؟ سيتم حذف كل شيء!", "confirm", async () => {
-            await deleteDoc(doc(db, "users", curUser.uid));
-            logout();
-        });
-    };
-
-    // --- المراقبين اللحظيين (Real-time) ---
+    // --- المراقبين ---
     function initListeners() {
-        // العدادات
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
@@ -345,15 +350,12 @@
                         <span style="font-weight:900">${x.c}</span>
                         <button class="c-btn" onclick="updateCount('${id}', ${x.c - 1})">-</button>
                     </div>
-                    <small style="font-size:0.6rem; display:block">
-                        ${isDone ? '<span style="color:var(--success)">تم الإنجاز ✅</span>' : `باقي لك ${x.g - x.c}`}
-                    </small>
+                    <small style="font-size:0.6rem">هدف: ${x.g}</small>
                 </div>`;
             });
             document.getElementById('cList').innerHTML = h;
         });
 
-        // الملاحظات
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
@@ -361,42 +363,38 @@
                 h += `<div class="card">
                     <pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
                     <div style="display:flex; gap:5px; margin-top:10px">
-                        <button class="btn btn-primary" style="padding:5px" onclick="copyText(\`${n.t.replace(/`/g, "\\`")}\`)">نسخ</button>
-                        <button class="btn btn-danger" style="padding:5px" onclick="delGen('notes','${id}')">حذف</button>
+                        <button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`")}\`)">تعديل ✏️</button>
+                        <button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button>
                     </div>
                 </div>`;
             });
             document.getElementById('nList').innerHTML = h;
         });
 
-        // الإحصائيات
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
                 const s = docSnap.data(), id = docSnap.id;
                 let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
                 h += `<div class="card">
-                    <div style="display:flex; justify-content:space-between; font-size:0.7rem">
-                        <b>${s.title}</b> <span>${s.date}</span>
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px">
+                        <b style="color:var(--admin); cursor:pointer" onclick="editStatName('${id}','${s.title}')">${s.title} ✏️</b> 
+                        <span>${s.date}</span>
                     </div>
                     <table><thead><tr><th>العداد</th><th>العدد</th></tr></thead><tbody>${rows}</tbody></table>
-                    <div style="display:flex; gap:5px; margin-top:10px">
-                        <button class="btn" style="padding:5px; background:var(--admin)" onclick="editStatName('${id}','${s.title}')">تعديل الاسم</button>
-                        <button class="btn btn-danger" style="padding:5px" onclick="delGen('stats','${id}')">حذف السجل</button>
-                    </div>
+                    <button class="btn btn-danger" style="padding:5px; margin-top:10px" onclick="delGen('stats','${id}')">حذف السجل</button>
                 </div>`;
             });
             document.getElementById('sList').innerHTML = h;
         });
     }
 
-    // دوال عامة
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "هل تريد حذف هذا العنصر نهائياً؟", "confirm", async () => {
+    window.logout = () => signOut(auth).then(() => location.reload());
+    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => {
         await deleteDoc(doc(db, "users", curUser.uid, col, id));
     });
-    window.copyText = (t) => { navigator.clipboard.writeText(t); showAlert("تم", "تم النسخ للمحافظة"); };
     window.editStatName = async (id, old) => {
-        const n = prompt("الاسم الجديد:", old); // استخدام برومبت المتصفح هنا فقط للاختصار، يمكن تحويله لمودل لاحقاً
+        const n = prompt("تعديل اسم السجل:", old);
         if(n) await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: n });
     };
 
