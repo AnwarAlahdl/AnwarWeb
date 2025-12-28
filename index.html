@@ -54,7 +54,7 @@
 <div class="modal" id="sysModal">
     <div class="modal-content">
         <h3 id="sysTitle">تنبيه</h3>
-        <p id="sysMsg"></p>
+        <div id="sysMsg"></div>
         <div id="sysBtns" style="display: flex; gap: 10px; margin-top:20px"></div>
     </div>
 </div>
@@ -173,7 +173,6 @@
     let curUser = null;
     let tempCode = "";
 
-    // --- الربط بالنافذة Global ---
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + 'Page').classList.add('active');
@@ -191,26 +190,44 @@
         document.getElementById('regBox').classList.toggle('hidden', !reg);
     };
 
-    window.showAlert = (title, msg, type = 'ok', onConfirm = null) => {
+    // --- نافذة التنبيه والتعديل المطورة (الحل للمشكلة 2) ---
+    window.showAlert = (title, msg, type = 'ok', onConfirm = null, defaultValue = '') => {
         const modal = document.getElementById('sysModal');
         const btns = document.getElementById('sysBtns');
+        const msgArea = document.getElementById('sysMsg');
+        
         document.getElementById('sysTitle').innerText = title;
-        document.getElementById('sysMsg').innerText = msg;
+        
+        // إذا كان نوع التنبيه "تعديل" نقوم بوضع textarea
+        if (type === 'edit') {
+            msgArea.innerHTML = `<textarea id="modalInput" rows="5" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:10px;">${defaultValue}</textarea>`;
+        } else {
+            msgArea.innerHTML = `<p>${msg}</p>`;
+        }
+        
         btns.innerHTML = '';
         if(type === 'ok') {
             btns.innerHTML = `<button class="btn btn-primary" onclick="closeAlert()">موافق</button>`;
-        } else {
-            const yes = document.createElement('button'); yes.className = 'btn btn-danger'; yes.innerText = 'تأكيد';
-            yes.onclick = () => { onConfirm(); closeAlert(); };
-            const no = document.createElement('button'); no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
+        } else if (type === 'confirm' || type === 'edit') {
+            const yes = document.createElement('button'); 
+            yes.className = 'btn btn-primary'; 
+            yes.innerText = type === 'edit' ? 'حفظ التعديل' : 'تأكيد';
+            yes.onclick = async () => { 
+                const value = type === 'edit' ? document.getElementById('modalInput').value : null;
+                await onConfirm(value); 
+                closeAlert(); 
+            };
+            
+            const no = document.createElement('button'); 
+            no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
             no.innerText = 'إلغاء'; no.onclick = closeAlert;
+            
             btns.appendChild(yes); btns.appendChild(no);
         }
         modal.style.display = 'flex';
     };
     window.closeAlert = () => document.getElementById('sysModal').style.display = 'none';
 
-    // --- نظام الدخول وتذكرني ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             curUser = user;
@@ -263,7 +280,6 @@
         } else showAlert("خطأ", "الرمز غير صحيح");
     };
 
-    // --- العدادات وتصفيرها ---
     window.addCounter = async () => {
         const n = document.getElementById('cn').value, g = document.getElementById('cg').value;
         if(!n || !g) return;
@@ -278,28 +294,22 @@
     window.transferStats = async () => {
         const snap = await getDocs(collection(db, "users", curUser.uid, "counters"));
         if(snap.empty) return;
-        
         let data = [];
         const batch = writeBatch(db);
-
         snap.forEach(d => {
             data.push(d.data());
-            // مشكلة 1: تصفير العدادات عند النقل
             batch.update(doc(db, "users", curUser.uid, "counters", d.id), { c: 0 });
         });
-        
         await addDoc(collection(db, "users", curUser.uid, "stats"), {
             title: "سجل يوم " + new Date().toLocaleDateString('ar-EG'),
             date: new Date().toLocaleString('ar-EG'),
             data: data,
             createdAt: Date.now()
         });
-        
         await batch.commit();
         showAlert("تم النقل", "تم حفظ الإحصائيات وتصفير جميع العدادات");
     };
 
-    // --- الملاحظات (مع زر التعديل) ---
     window.addNote = async () => {
         const t = document.getElementById('ntIn').value;
         if(!t) return;
@@ -307,15 +317,15 @@
         document.getElementById('ntIn').value = '';
     };
 
-    // مشكلة 4: زر التعديل على الملاحظات
+    // تعديل الملاحظة من داخل الموقع (الحل للمشكلة 4 و 2)
     window.editNote = async (id, currentText) => {
-        const newText = prompt("تعديل الملاحظة:", currentText);
-        if (newText !== null && newText !== currentText) {
-            await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
-        }
+        showAlert("تعديل الملاحظة ✏️", "", "edit", async (newText) => {
+            if (newText !== null && newText.trim() !== "" && newText !== currentText) {
+                await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
+            }
+        }, currentText);
     };
 
-    // --- الإعدادات (مشكلة 3) ---
     window.renderSettings = async () => {
         const d = await getDoc(doc(db, "users", curUser.uid));
         const data = d.data();
@@ -335,7 +345,6 @@
         document.getElementById('eU').value=''; document.getElementById('eE').value=''; document.getElementById('eSec').value='';
     };
 
-    // --- المراقبين ---
     function initListeners() {
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
@@ -363,7 +372,7 @@
                 h += `<div class="card">
                     <pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
                     <div style="display:flex; gap:5px; margin-top:10px">
-                        <button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`")}\`)">تعديل ✏️</button>
+                        <button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`)">تعديل ✏️</button>
                         <button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button>
                     </div>
                 </div>`;
@@ -393,9 +402,14 @@
     window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => {
         await deleteDoc(doc(db, "users", curUser.uid, col, id));
     });
+
+    // تعديل اسم السجل من داخل الموقع (الحل للمشكلة 2)
     window.editStatName = async (id, old) => {
-        const n = prompt("تعديل اسم السجل:", old);
-        if(n) await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: n });
+        showAlert("تعديل اسم السجل", "", "edit", async (newName) => {
+            if(newName && newName !== old) {
+                await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newName });
+            }
+        }, old);
     };
 
 </script>
