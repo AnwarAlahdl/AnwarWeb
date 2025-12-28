@@ -31,7 +31,7 @@
         }
 
         .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); position: relative; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #f1f5f9; color: #1e293b; font-family: 'Cairo'; box-sizing: border-box; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #f1f5f9; color: #1e293b; font-family: 'Cairo'; box-sizing: border-box; font-weight: bold; }
         .btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
@@ -75,7 +75,7 @@
     <div class="modal-content">
         <h3 id="sysTitle">تنبيه</h3>
         <div id="sysMsg"></div>
-        <div id="sysBtns" style="display: flex; gap: 10px; margin-top:20px"></div>
+        <div id="sysBtns" style="display: flex; flex-direction: column; gap: 10px; margin-top:20px"></div>
     </div>
 </div>
 
@@ -188,10 +188,9 @@
     let curUser = null;
     let userData = null;
     let localCounters = [];
+    let currentNoticeId = null; 
     
-    // تم تحديد Anwar كمدير للنظام
     const ADMIN_USERNAME = "Anwar";
-    const ADMIN_EMAIL = "anwar.alahdl311@gmail.com";
 
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -216,11 +215,24 @@
         const btns = document.getElementById('sysBtns');
         const msgArea = document.getElementById('sysMsg');
         document.getElementById('sysTitle').innerText = title;
+        
         if (type === 'edit') {
             msgArea.innerHTML = `<textarea id="modalInput" rows="5" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:10px;">${defaultValue}</textarea>`;
+        } else if (type === 'broadcast') {
+            msgArea.innerHTML = `
+                <textarea id="bcMsg" placeholder="اكتب التعميم هنا..." rows="4"></textarea>
+                <div style="text-align:right; font-size:0.8rem; margin:10px 0">مدة العرض:</div>
+                <select id="bcTime">
+                    <option value="0">بدون مؤقت (يدوي)</option>
+                    <option value="1">ساعة واحدة</option>
+                    <option value="6">6 ساعات</option>
+                    <option value="24">يوم كامل</option>
+                </select>
+            `;
         } else {
             msgArea.innerHTML = `<p>${msg}</p>`;
         }
+        
         btns.innerHTML = '';
         if(type === 'ok') {
             btns.innerHTML = `<button class="btn btn-primary" onclick="closeAlert()">موافق</button>`;
@@ -237,6 +249,38 @@
             no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
             no.innerText = 'إلغاء'; no.onclick = closeAlert;
             btns.appendChild(yes); btns.appendChild(no);
+        } else if (type === 'broadcast') {
+            const sendBtn = document.createElement('button');
+            sendBtn.className = 'btn btn-admin';
+            sendBtn.innerText = 'إرسال الآن';
+            sendBtn.onclick = async () => {
+                const text = document.getElementById('bcMsg').value;
+                const hours = parseInt(document.getElementById('bcTime').value);
+                if(onConfirm) await onConfirm({text, hours});
+                closeAlert();
+            };
+            
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn btn-danger';
+            delBtn.innerText = 'حذف التعميم الحالي';
+            delBtn.onclick = async () => {
+                if(currentNoticeId) {
+                    await deleteDoc(doc(db, "system_notices", currentNoticeId));
+                    showAlert("تم", "تم حذف التعميم بنجاح");
+                } else {
+                    alert("لا يوجد تعميم نشط لحذفه");
+                }
+            };
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn';
+            cancelBtn.style.background = '#475569'; cancelBtn.style.color = 'white';
+            cancelBtn.innerText = 'إلغاء';
+            cancelBtn.onclick = closeAlert;
+            
+            btns.appendChild(sendBtn);
+            btns.appendChild(delBtn);
+            btns.appendChild(cancelBtn);
         }
         modal.style.display = 'flex';
     };
@@ -248,7 +292,6 @@
             const uDoc = await getDoc(doc(db, "users", user.uid));
             if(uDoc.exists()) {
                 userData = uDoc.data();
-                // التحقق من اسم المستخدم أو البريد الإلكتروني لتفعيل صلاحيات الأدمن
                 if(userData.u === ADMIN_USERNAME) {
                     document.getElementById('adminLink').classList.remove('hidden');
                 }
@@ -267,26 +310,38 @@
 
     function listenToAnnouncements() {
         const q = query(collection(db, "system_notices"), orderBy("createdAt", "desc"), limit(1));
-        onSnapshot(q, (snap) => {
+        onSnapshot(q, async (snap) => {
             if(!snap.empty) {
-                const data = snap.docs[0].data();
-                document.getElementById('noticeText').innerText = data.text;
-                document.getElementById('globalNotice').style.display = 'block';
+                const noticeDoc = snap.docs[0];
+                const data = noticeDoc.data();
+                currentNoticeId = noticeDoc.id;
+
+                // التحقق من الوقت التلقائي
+                if(data.expiresAt && Date.now() > data.expiresAt) {
+                    await deleteDoc(doc(db, "system_notices", currentNoticeId));
+                    document.getElementById('globalNotice').style.display = 'none';
+                } else {
+                    document.getElementById('noticeText').innerText = data.text;
+                    document.getElementById('globalNotice').style.display = 'block';
+                }
             } else {
+                currentNoticeId = null;
                 document.getElementById('globalNotice').style.display = 'none';
             }
         });
     }
 
     window.openAdminBroadcast = () => {
-        showAlert("📢 إرسال رسالة للجميع", "اكتب الرسالة التي ستظهر لكل المستخدمين:", "edit", async (msg) => {
-            if(msg && msg.trim() !== "") {
+        showAlert("📢 إدارة التعميمات", "", "broadcast", async (data) => {
+            if(data.text && data.text.trim() !== "") {
+                const expiry = data.hours > 0 ? (Date.now() + (data.hours * 60 * 60 * 1000)) : null;
                 await addDoc(collection(db, "system_notices"), {
-                    text: msg,
+                    text: data.text,
                     sender: userData.u,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    expiresAt: expiry
                 });
-                showAlert("تم", "تم إرسال الرسالة لجميع المستخدمين بنجاح");
+                showAlert("تم", "تم إرسال التعميم بنجاح");
             }
         });
     };
