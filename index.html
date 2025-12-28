@@ -189,6 +189,7 @@
     let userData = null;
     let localCounters = [];
     
+    // تم تحديد Anwar كمدير للنظام
     const ADMIN_USERNAME = "Anwar"; 
 
     window.nav = (id) => {
@@ -246,6 +247,7 @@
             const uDoc = await getDoc(doc(db, "users", user.uid));
             if(uDoc.exists()) {
                 userData = uDoc.data();
+                // التحقق من اسم المستخدم أو البريد الإلكتروني لتفعيل صلاحيات الأدمن
                 if(userData.u === ADMIN_USERNAME) {
                     document.getElementById('adminLink').classList.remove('hidden');
                 }
@@ -258,6 +260,7 @@
             nav('auth');
             document.getElementById('hamBtn').style.display = 'none';
             document.getElementById('globalNotice').style.display = 'none';
+            document.getElementById('adminLink').classList.add('hidden');
         }
     });
 
