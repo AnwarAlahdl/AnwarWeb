@@ -16,9 +16,19 @@
         .sidebar-item { padding: 15px 25px; cursor: pointer; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; align-items: center; gap: 10px; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 1500; backdrop-filter: blur(3px); }
 
-        .container { width: 95%; max-width: 600px; margin: 20px auto; padding-bottom: 50px; }
+        .admin-msg-banner { background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 12px; border-radius: 12px; margin-bottom: 20px; display: none; position: relative; animation: slideIn 0.5s ease; border: 1px solid rgba(255,255,255,0.2); }
+
+        .container { width: 98%; max-width: 1300px; margin: 20px auto; padding-bottom: 50px; }
         .section { display: none; }
         .section.active { display: block; animation: slideIn 0.3s ease-out; }
+
+        .main-layout { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 30px; align-items: start; }
+        .divider { background: var(--border); width: 1px; height: 100%; min-height: 70vh; opacity: 0.6; }
+
+        @media (max-width: 950px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .divider { display: none; }
+        }
 
         .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); position: relative; }
         input, textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #f1f5f9; color: #1e293b; font-family: 'Cairo'; box-sizing: border-box; font-weight: bold; }
@@ -26,14 +36,19 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-admin { background: var(--admin); color: white; }
 
         .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .counter-item { background: var(--card); padding: 15px; border-radius: 20px; border: 2px solid var(--border); text-align: center; position: relative; }
-        .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .counter-item { background: var(--card); padding: 15px; border-radius: 20px; border: 2px solid var(--border); text-align: center; position: relative; transition: 0.3s; }
+        .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); opacity: 0.85; }
+
+        .move-btns { position: absolute; top: 5px; right: 5px; display: flex; flex-direction: column; gap: 2px; }
+        .m-btn { background: rgba(255,255,255,0.1); border: none; color: white; font-size: 10px; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
+        .m-btn:hover { background: var(--primary); }
+
         .c-btns { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 10px 0; }
         .c-btn { width: 35px; height: 35px; border-radius: 10px; border: none; font-weight: 900; cursor: pointer; background: #334155; color: white; }
         
-        /* التنسيقات الجديدة للحالة */
         .status-msg { font-size: 0.65rem; margin-top: 5px; display: block; min-height: 18px; }
         .msg-success { color: var(--success); font-weight: bold; }
         .msg-info { color: #94a3b8; }
@@ -71,17 +86,21 @@
 </header>
 
 <nav class="sidebar" id="sidebar">
-    <div class="sidebar-item" onclick="nav('counter')">📊 العدادات</div>
+    <div class="sidebar-item" onclick="nav('counter')">📊 العدادات والسجل</div>
     <div class="sidebar-item" onclick="nav('notes')">📝 الملاحظات</div>
-    <div class="sidebar-item" onclick="nav('stats')">📈 الإحصائيات</div>
     <div class="sidebar-item" onclick="nav('settings')">⚙️ الإعدادات</div>
+    <div id="adminLink" class="sidebar-item hidden" style="color:var(--admin)" onclick="openAdminBroadcast()">📢 إرسال تعميم</div>
     <div class="sidebar-item" style="color:var(--danger); border-top:1px solid var(--border); margin-top:20px" onclick="logout()">🚪 خروج</div>
 </nav>
 
 <div class="container">
-    
+    <div id="globalNotice" class="admin-msg-banner">
+        <div style="font-weight: 900; font-size: 0.9rem;">📢 رسالة من الإدارة:</div>
+        <div id="noticeText" style="font-size: 0.85rem; margin-top: 5px;"></div>
+    </div>
+
     <div id="authPage" class="section active">
-        <div class="card" id="loginBox">
+        <div class="card" id="loginBox" style="max-width: 450px; margin: auto;">
             <h2 style="text-align: center;">تسجيل الدخول</h2>
             <input type="text" id="lUser" placeholder="الإيميل أو اليوزر نيم">
             <input type="password" id="lPass" placeholder="كلمة المرور">
@@ -91,8 +110,7 @@
             <button class="btn btn-primary" onclick="tryLogin()">دخول</button>
             <button class="btn" style="background:none; color:var(--primary)" onclick="toggleAuth(true)">إنشاء حساب</button>
         </div>
-
-        <div class="card hidden" id="regBox">
+        <div class="card hidden" id="regBox" style="max-width: 450px; margin: auto;">
             <h2 style="text-align: center;">حساب جديد</h2>
             <input type="text" id="rU" placeholder="اليوزر نيم">
             <input type="email" id="rE" placeholder="الإيميل">
@@ -103,63 +121,55 @@
         </div>
     </div>
 
-    <div id="twoFAPage" class="section">
-        <div class="card" style="text-align: center;">
-            <h2>التحقق 🛡️</h2>
-            <div id="captchaBox" style="font-size: 2rem; font-weight: 900; color: var(--primary); letter-spacing: 5px; margin: 15px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px;"></div>
-            <input type="text" id="captchaIn" placeholder="اكتب الرمز" style="text-align: center;">
-            <button class="btn btn-primary" onclick="verify2FA()">دخول</button>
-        </div>
-    </div>
-
     <div id="counterPage" class="section">
-        <div class="card" style="text-align: center;">
-            <h3>إضافة عداد جديد</h3>
-            <input type="text" id="cn" placeholder="اسم العداد">
-            <input type="number" id="cg" placeholder="الهدف الرقمي">
-            <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
+        <div class="main-layout">
+            <div class="column-right">
+                <div class="card" style="text-align: center;">
+                    <h3 style="margin-top:0">إضافة عداد جديد</h3>
+                    <input type="text" id="cn" placeholder="اسم العداد">
+                    <input type="number" id="cg" placeholder="الهدف الرقمي">
+                    <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
+                </div>
+                <div class="counters-grid" id="cList"></div>
+                <button class="btn btn-success" style="margin-top:20px" onclick="transferStats()">نقل للإحصائيات وتصفير ➡️</button>
+            </div>
+            <div class="divider"></div>
+            <div class="column-left">
+                <h2 style="text-align: center; margin-top:0">📈 سجل الإحصائيات</h2>
+                <div id="sList"></div>
+            </div>
         </div>
-        <div class="counters-grid" id="cList"></div>
-        <button class="btn btn-success" style="margin-top:20px" onclick="transferStats()">نقل للإحصائيات وتصفير ➡️</button>
     </div>
 
     <div id="notesPage" class="section">
-        <div class="card">
+        <div class="card" style="max-width: 600px; margin: auto;">
             <h3>📝 ملاحظة جديدة</h3>
             <textarea id="ntIn" placeholder="اكتب ملاحظتك هنا..." rows="4"></textarea>
             <button class="btn btn-primary" onclick="addNote()">حفظ الملاحظة</button>
         </div>
-        <div id="nList"></div>
-    </div>
-
-    <div id="statsPage" class="section">
-        <h2>📈 سجل الإحصائيات</h2>
-        <div id="sList"></div>
+        <div id="nList" style="max-width: 600px; margin: 20px auto;"></div>
     </div>
 
     <div id="settingsPage" class="section">
-        <div class="card">
+        <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ الإعدادات الحالية</h3>
             <div id="accDetails">
                 <div class="setting-row"><span>اليوزر:</span> <b id="dispU">-</b></div>
                 <div class="setting-row"><span>الإيميل:</span> <b id="dispE">-</b></div>
-                <div class="setting-row"><span>الرمز:</span> <b id="dispS">-</b></div>
             </div>
             <hr style="border:0.1px solid var(--border); margin:20px 0">
             <h3>تعديل البيانات</h3>
             <input type="text" id="eU" placeholder="يوزر جديد">
             <input type="email" id="eE" placeholder="إيميل جديد">
-            <input type="text" id="eSec" placeholder="رمز 2FA جديد">
             <button class="btn btn-primary" onclick="updateProfile()">تحديث المعلومات</button>
-            <button class="btn btn-danger" style="margin-top:10px" onclick="confirmDelAcc()">حذف الحساب</button>
+            <button class="btn btn-danger" style="margin-top:10px" onclick="logout()">خروج</button>
         </div>
     </div>
-
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -176,11 +186,15 @@
     const auth = getAuth(app);
 
     let curUser = null;
-    let tempCode = "";
+    let userData = null;
+    let localCounters = [];
+    
+    const ADMIN_USERNAME = "anwar"; 
 
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id + 'Page').classList.add('active');
+        const target = document.getElementById(id + 'Page');
+        if(target) target.classList.add('active');
         if(document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
         if(id === 'settings') renderSettings();
     };
@@ -211,10 +225,10 @@
         } else if (type === 'confirm' || type === 'edit') {
             const yes = document.createElement('button'); 
             yes.className = 'btn btn-primary'; 
-            yes.innerText = type === 'edit' ? 'حفظ التعديل' : 'تأكيد';
+            yes.innerText = type === 'edit' ? 'حفظ' : 'تأكيد';
             yes.onclick = async () => { 
                 const value = type === 'edit' ? document.getElementById('modalInput').value : null;
-                await onConfirm(value); 
+                if(onConfirm) await onConfirm(value); 
                 closeAlert(); 
             };
             const no = document.createElement('button'); 
@@ -230,14 +244,48 @@
         if (user) {
             curUser = user;
             const uDoc = await getDoc(doc(db, "users", user.uid));
-            if(uDoc.exists()) curUser.userData = uDoc.data();
-            start2FA();
+            if(uDoc.exists()) {
+                userData = uDoc.data();
+                if(userData.u === ADMIN_USERNAME) {
+                    document.getElementById('adminLink').classList.remove('hidden');
+                }
+            }
+            document.getElementById('hamBtn').style.display = 'block';
+            nav('counter');
             initListeners();
+            listenToAnnouncements();
         } else {
             nav('auth');
             document.getElementById('hamBtn').style.display = 'none';
+            document.getElementById('globalNotice').style.display = 'none';
         }
     });
+
+    function listenToAnnouncements() {
+        const q = query(collection(db, "system_notices"), orderBy("createdAt", "desc"), limit(1));
+        onSnapshot(q, (snap) => {
+            if(!snap.empty) {
+                const data = snap.docs[0].data();
+                document.getElementById('noticeText').innerText = data.text;
+                document.getElementById('globalNotice').style.display = 'block';
+            } else {
+                document.getElementById('globalNotice').style.display = 'none';
+            }
+        });
+    }
+
+    window.openAdminBroadcast = () => {
+        showAlert("📢 إرسال رسالة للجميع", "اكتب الرسالة التي ستظهر لكل المستخدمين:", "edit", async (msg) => {
+            if(msg && msg.trim() !== "") {
+                await addDoc(collection(db, "system_notices"), {
+                    text: msg,
+                    sender: userData.u,
+                    createdAt: Date.now()
+                });
+                showAlert("تم", "تم إرسال الرسالة لجميع المستخدمين بنجاح");
+            }
+        });
+    };
 
     window.tryLogin = async () => {
         const id = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
@@ -259,30 +307,32 @@
         const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value;
         try {
             const res = await createUserWithEmailAndPassword(auth, e, p);
-            await setDoc(doc(db, "users", res.user.uid), { u, e, sec: "1234", createdAt: Date.now() });
+            await setDoc(doc(db, "users", res.user.uid), { u, e, createdAt: Date.now() });
             showAlert("نجاح", "تم إنشاء الحساب");
             toggleAuth(false);
         } catch (err) { showAlert("فشل", err.message); }
     };
 
-    function start2FA() {
-        nav('twoFA');
-        tempCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-        document.getElementById('captchaBox').innerText = tempCode;
-    }
-
-    window.verify2FA = () => {
-        if(document.getElementById('captchaIn').value.toUpperCase() === tempCode) {
-            document.getElementById('hamBtn').style.display = 'block';
-            nav('counter');
-        } else showAlert("خطأ", "الرمز غير صحيح");
-    };
-
     window.addCounter = async () => {
         const n = document.getElementById('cn').value, g = document.getElementById('cg').value;
         if(!n || !g) return;
-        await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g: parseInt(g), c: 0, createdAt: Date.now() });
+        const orderValue = localCounters.length > 0 ? Math.max(...localCounters.map(c => c.ord || 0)) + 1 : 0;
+        await addDoc(collection(db, "users", curUser.uid, "counters"), { 
+            n, g: parseInt(g), c: 0, ord: orderValue, createdAt: Date.now() 
+        });
         document.getElementById('cn').value = ''; document.getElementById('cg').value = '';
+    };
+
+    window.moveCounter = async (id, direction) => {
+        const idx = localCounters.findIndex(c => c.id === id);
+        if (idx === -1) return;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= localCounters.length) return;
+        const current = localCounters[idx], target = localCounters[newIdx];
+        const batch = writeBatch(db);
+        batch.update(doc(db, "users", curUser.uid, "counters", current.id), { ord: target.ord || 0 });
+        batch.update(doc(db, "users", curUser.uid, "counters", target.id), { ord: current.ord || 0 });
+        await batch.commit();
     };
 
     window.updateCount = async (id, val) => {
@@ -317,7 +367,7 @@
 
     window.editNote = async (id, currentText) => {
         showAlert("تعديل الملاحظة ✏️", "", "edit", async (newText) => {
-            if (newText !== null && newText.trim() !== "" && newText !== currentText) {
+            if (newText && newText.trim() !== "" && newText !== currentText) {
                 await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
             }
         }, currentText);
@@ -325,47 +375,38 @@
 
     window.renderSettings = async () => {
         const d = await getDoc(doc(db, "users", curUser.uid));
-        const data = d.data();
-        document.getElementById('dispU').innerText = data.u;
-        document.getElementById('dispE').innerText = data.e;
-        document.getElementById('dispS').innerText = data.sec;
+        if(d.exists()){
+            const data = d.data();
+            document.getElementById('dispU').innerText = data.u || '-';
+            document.getElementById('dispE').innerText = data.e || '-';
+        }
     };
 
     window.updateProfile = async () => {
-        const u = document.getElementById('eU').value, e = document.getElementById('eE').value, s = document.getElementById('eSec').value;
+        const u = document.getElementById('eU').value, e = document.getElementById('eE').value;
         let up = {};
-        if(u) up.u = u; if(e) up.e = e; if(s) up.sec = s;
+        if(u) up.u = u; if(e) up.e = e;
         if(Object.keys(up).length === 0) return;
         await updateDoc(doc(db, "users", curUser.uid), up);
         showAlert("تم", "تم تحديث البيانات"); 
         renderSettings();
-        document.getElementById('eU').value=''; document.getElementById('eE').value=''; document.getElementById('eSec').value='';
+        document.getElementById('eU').value=''; document.getElementById('eE').value='';
     };
 
     function initListeners() {
-        onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "desc")), (snap) => {
+        onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("ord", "asc")), (snap) => {
+            localCounters = [];
+            snap.forEach(docSnap => localCounters.push({ id: docSnap.id, ...docSnap.data() }));
             let h = '';
-            snap.forEach(docSnap => {
-                const x = docSnap.data(), id = docSnap.id;
+            localCounters.forEach(x => {
                 const isDone = x.c >= x.g;
                 const remaining = x.g - x.c;
-                
-                // إضافة رسالة الحالة التفاعلية
-                let statusHtml = '';
-                if (isDone) {
-                    statusHtml = `<span class="status-msg msg-success">تم إنجاز العدد المطلوب 🥳</span>`;
-                } else {
-                    statusHtml = `<span class="status-msg msg-info">باقيلك: <b>${remaining}</b> لتوصل لـ ${x.g}</span>`;
-                }
-
+                let statusHtml = isDone ? `<span class="status-msg msg-success">اويلي ياشيخ انا اشهد انك كفو 🫡</span>` : `<span class="status-msg msg-info">باقيلك: <b>${remaining}</b> لتوصل لـ ${x.g}</span>`;
                 h += `<div class="counter-item ${isDone ? 'completed' : ''}">
-                    <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${id}')">×</button>
+                    <div class="move-btns"><button class="m-btn" onclick="moveCounter('${x.id}', -1)">▲</button><button class="m-btn" onclick="moveCounter('${x.id}', 1)">▼</button></div>
+                    <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${x.id}')">×</button>
                     <b style="font-size:0.8rem">${x.n}</b>
-                    <div class="c-btns">
-                        <button class="c-btn" onclick="updateCount('${id}', ${x.c + 1})">+</button>
-                        <span style="font-weight:900">${x.c}</span>
-                        <button class="c-btn" onclick="updateCount('${id}', ${x.c - 1})">-</button>
-                    </div>
+                    <div class="c-btns"><button class="c-btn" onclick="updateCount('${x.id}', ${x.c + 1})">+</button><span style="font-weight:900">${x.c}</span><button class="c-btn" onclick="updateCount('${x.id}', ${x.c - 1})">-</button></div>
                     ${statusHtml}
                 </div>`;
             });
@@ -376,13 +417,8 @@
             let h = '';
             snap.forEach(docSnap => {
                 const n = docSnap.data(), id = docSnap.id;
-                h += `<div class="card">
-                    <pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
-                    <div style="display:flex; gap:5px; margin-top:10px">
-                        <button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`)">تعديل ✏️</button>
-                        <button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button>
-                    </div>
-                </div>`;
+                h += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
+                    <div style="display:flex; gap:5px; margin-top:10px"><button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`)">تعديل ✏️</button><button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button></div></div>`;
             });
             document.getElementById('nList').innerHTML = h;
         });
@@ -392,32 +428,16 @@
             snap.forEach(docSnap => {
                 const s = docSnap.data(), id = docSnap.id;
                 let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
-                h += `<div class="card">
-                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px">
-                        <b style="color:var(--admin); cursor:pointer" onclick="editStatName('${id}','${s.title}')">${s.title} ✏️</b> 
-                        <span>${s.date}</span>
-                    </div>
-                    <table><thead><tr><th>العداد</th><th>العدد</th></tr></thead><tbody>${rows}</tbody></table>
-                    <button class="btn btn-danger" style="padding:5px; margin-top:10px" onclick="delGen('stats','${id}')">حذف السجل</button>
-                </div>`;
+                h += `<div class="card"><div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px"><b style="color:var(--admin); cursor:pointer" onclick="editStatName('${id}','${s.title}')">${s.title} ✏️</b><span>${s.date}</span></div>
+                    <table><thead><tr><th>العداد</th><th>العدد</th></tr></thead><tbody>${rows}</tbody></table><button class="btn btn-danger" style="padding:5px; margin-top:10px" onclick="delGen('stats','${id}')">حذف السجل</button></div>`;
             });
             document.getElementById('sList').innerHTML = h;
         });
     }
 
     window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => {
-        await deleteDoc(doc(db, "users", curUser.uid, col, id));
-    });
-
-    window.editStatName = async (id, old) => {
-        showAlert("تعديل اسم السجل", "", "edit", async (newName) => {
-            if(newName && newName !== old) {
-                await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newName });
-            }
-        }, old);
-    };
-
+    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
+    window.editStatName = async (id, old) => { showAlert("تعديل اسم السجل", "", "edit", async (newName) => { if(newName && newName !== old) { await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newName }); } }, old); };
 </script>
 </body>
 </html>
