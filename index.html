@@ -32,6 +32,11 @@
         .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
         .c-btns { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 10px 0; }
         .c-btn { width: 35px; height: 35px; border-radius: 10px; border: none; font-weight: 900; cursor: pointer; background: #334155; color: white; }
+        
+        /* التنسيقات الجديدة للحالة */
+        .status-msg { font-size: 0.65rem; margin-top: 5px; display: block; min-height: 18px; }
+        .msg-success { color: var(--success); font-weight: bold; }
+        .msg-info { color: #94a3b8; }
 
         .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 8px; font-size: 0.9rem; }
         .setting-row b { color: var(--primary); }
@@ -190,21 +195,16 @@
         document.getElementById('regBox').classList.toggle('hidden', !reg);
     };
 
-    // --- نافذة التنبيه والتعديل المطورة (الحل للمشكلة 2) ---
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, defaultValue = '') => {
         const modal = document.getElementById('sysModal');
         const btns = document.getElementById('sysBtns');
         const msgArea = document.getElementById('sysMsg');
-        
         document.getElementById('sysTitle').innerText = title;
-        
-        // إذا كان نوع التنبيه "تعديل" نقوم بوضع textarea
         if (type === 'edit') {
             msgArea.innerHTML = `<textarea id="modalInput" rows="5" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:10px;">${defaultValue}</textarea>`;
         } else {
             msgArea.innerHTML = `<p>${msg}</p>`;
         }
-        
         btns.innerHTML = '';
         if(type === 'ok') {
             btns.innerHTML = `<button class="btn btn-primary" onclick="closeAlert()">موافق</button>`;
@@ -217,11 +217,9 @@
                 await onConfirm(value); 
                 closeAlert(); 
             };
-            
             const no = document.createElement('button'); 
             no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
             no.innerText = 'إلغاء'; no.onclick = closeAlert;
-            
             btns.appendChild(yes); btns.appendChild(no);
         }
         modal.style.display = 'flex';
@@ -317,7 +315,6 @@
         document.getElementById('ntIn').value = '';
     };
 
-    // تعديل الملاحظة من داخل الموقع (الحل للمشكلة 4 و 2)
     window.editNote = async (id, currentText) => {
         showAlert("تعديل الملاحظة ✏️", "", "edit", async (newText) => {
             if (newText !== null && newText.trim() !== "" && newText !== currentText) {
@@ -351,6 +348,16 @@
             snap.forEach(docSnap => {
                 const x = docSnap.data(), id = docSnap.id;
                 const isDone = x.c >= x.g;
+                const remaining = x.g - x.c;
+                
+                // إضافة رسالة الحالة التفاعلية
+                let statusHtml = '';
+                if (isDone) {
+                    statusHtml = `<span class="status-msg msg-success">تم إنجاز العدد المطلوب 🥳</span>`;
+                } else {
+                    statusHtml = `<span class="status-msg msg-info">باقيلك: <b>${remaining}</b> لتوصل لـ ${x.g}</span>`;
+                }
+
                 h += `<div class="counter-item ${isDone ? 'completed' : ''}">
                     <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${id}')">×</button>
                     <b style="font-size:0.8rem">${x.n}</b>
@@ -359,7 +366,7 @@
                         <span style="font-weight:900">${x.c}</span>
                         <button class="c-btn" onclick="updateCount('${id}', ${x.c - 1})">-</button>
                     </div>
-                    <small style="font-size:0.6rem">هدف: ${x.g}</small>
+                    ${statusHtml}
                 </div>`;
             });
             document.getElementById('cList').innerHTML = h;
@@ -403,7 +410,6 @@
         await deleteDoc(doc(db, "users", curUser.uid, col, id));
     });
 
-    // تعديل اسم السجل من داخل الموقع (الحل للمشكلة 2)
     window.editStatName = async (id, old) => {
         showAlert("تعديل اسم السجل", "", "edit", async (newName) => {
             if(newName && newName !== old) {
