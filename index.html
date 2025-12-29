@@ -316,7 +316,6 @@
                 const data = noticeDoc.data();
                 currentNoticeId = noticeDoc.id;
 
-                // التحقق من الوقت التلقائي
                 if(data.expiresAt && Date.now() > data.expiresAt) {
                     await deleteDoc(doc(db, "system_notices", currentNoticeId));
                     document.getElementById('globalNotice').style.display = 'none';
@@ -399,22 +398,35 @@
     };
 
     window.transferStats = async () => {
-        const snap = await getDocs(collection(db, "users", curUser.uid, "counters"));
-        if(snap.empty) return;
-        let data = [];
+        if(localCounters.length === 0) {
+            showAlert("تنبيه", "لا توجد عدادات نشطة لنقلها حالياً");
+            return;
+        }
+
+        let dataToSave = [];
         const batch = writeBatch(db);
-        snap.forEach(d => {
-            data.push(d.data());
-            batch.update(doc(db, "users", curUser.uid, "counters", d.id), { c: 0 });
+
+        localCounters.forEach(c => {
+            dataToSave.push({
+                n: c.n,
+                c: c.c,
+                g: c.g
+            });
+            batch.update(doc(db, "users", curUser.uid, "counters", c.id), { c: 0 });
         });
-        await addDoc(collection(db, "users", curUser.uid, "stats"), {
-            title: "سجل يوم " + new Date().toLocaleDateString('ar-EG'),
-            date: new Date().toLocaleString('ar-EG'),
-            data: data,
-            createdAt: Date.now()
-        });
-        await batch.commit();
-        showAlert("تم النقل", "تم حفظ الإحصائيات وتصفير جميع العدادات");
+
+        try {
+            await addDoc(collection(db, "users", curUser.uid, "stats"), {
+                title: "سجل يوم " + new Date().toLocaleDateString('ar-EG'),
+                date: new Date().toLocaleString('ar-EG'),
+                data: dataToSave,
+                createdAt: Date.now()
+            });
+            await batch.commit();
+            showAlert("تم النقل", "تم حفظ الإحصائيات الحالية وتصفير جميع العدادات");
+        } catch (e) {
+            showAlert("خطأ", "فشل في عملية النقل: " + e.message);
+        }
     };
 
     window.addNote = async () => {
@@ -456,8 +468,21 @@
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("ord", "asc")), (snap) => {
             localCounters = [];
             snap.forEach(docSnap => localCounters.push({ id: docSnap.id, ...docSnap.data() }));
+
+            // --- الفرز التلقائي: العدادات المكتملة تنزل للأسفل تلقائياً ---
+            let sortedCounters = [...localCounters].sort((a, b) => {
+                const aDone = a.c >= a.g;
+                const bDone = b.c >= b.g;
+                // إذا كان a مكتمل و b غير مكتمل، a يذهب للأسفل (1)
+                if (aDone && !bDone) return 1;
+                // إذا كان b مكتمل و a غير مكتمل، b يذهب للأسفل (-1)
+                if (!aDone && bDone) return -1;
+                // إذا كان كلاهما مكتمل أو كلاهما لا، نحافظ على ترتيب ord الأصلي
+                return 0;
+            });
+
             let h = '';
-            localCounters.forEach(x => {
+            sortedCounters.forEach(x => {
                 const isDone = x.c >= x.g;
                 const remaining = x.g - x.c;
                 let statusHtml = isDone ? `<span class="status-msg msg-success">اويلي ياشيخ انا اشهد انك كفو 🫡</span>` : `<span class="status-msg msg-info">باقيلك: <b>${remaining}</b> لتوصل لـ ${x.g}</span>`;
