@@ -16,8 +16,6 @@
         .sidebar-item { padding: 15px 25px; cursor: pointer; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; align-items: center; gap: 10px; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 1500; backdrop-filter: blur(3px); }
 
-        .admin-msg-banner { background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 12px; border-radius: 12px; margin-bottom: 20px; display: none; position: relative; animation: slideIn 0.5s ease; border: 1px solid rgba(255,255,255,0.2); }
-
         .container { width: 98%; max-width: 1300px; margin: 20px auto; padding-bottom: 50px; }
         .section { display: none; }
         .section.active { display: block; animation: slideIn 0.3s ease-out; }
@@ -36,32 +34,18 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-admin { background: var(--admin); color: white; }
 
         .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .counter-item { background: var(--card); padding: 15px; border-radius: 20px; border: 2px solid var(--border); text-align: center; position: relative; transition: 0.3s; }
-        .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); opacity: 0.85; }
-
-        .move-btns { position: absolute; top: 5px; right: 5px; display: flex; flex-direction: column; gap: 2px; }
-        .m-btn { background: rgba(255,255,255,0.1); border: none; color: white; font-size: 10px; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
-        .m-btn:hover { background: var(--primary); }
-
+        .counter-item { background: var(--card); padding: 15px; border-radius: 20px; border: 2px solid var(--border); text-align: center; position: relative; }
         .c-btns { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 10px 0; }
         .c-btn { width: 35px; height: 35px; border-radius: 10px; border: none; font-weight: 900; cursor: pointer; background: #334155; color: white; }
-        
-        .status-msg { font-size: 0.65rem; margin-top: 5px; display: block; min-height: 18px; }
-        .msg-success { color: var(--success); font-weight: bold; }
-        .msg-info { color: #94a3b8; }
 
-        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 8px; font-size: 0.9rem; }
-        .setting-row b { color: var(--primary); }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; overflow: hidden; font-size: 0.8rem; }
-        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; overflow: hidden; font-size: 0.85rem; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border); color: var(--text); }
         th { background: var(--primary); color: white; }
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid var(--border); }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 25px; width: 100%; max-width: 350px; text-align: center; }
         
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
@@ -89,35 +73,17 @@
     <div class="sidebar-item" onclick="nav('counter')">📊 العدادات والسجل</div>
     <div class="sidebar-item" onclick="nav('notes')">📝 الملاحظات</div>
     <div class="sidebar-item" onclick="nav('settings')">⚙️ الإعدادات</div>
-    <div id="adminLink" class="sidebar-item hidden" style="color:var(--admin)" onclick="openAdminBroadcast()">📢 إرسال تعميم</div>
     <div class="sidebar-item" style="color:var(--danger); border-top:1px solid var(--border); margin-top:20px" onclick="logout()">🚪 خروج</div>
 </nav>
 
 <div class="container">
-    <div id="globalNotice" class="admin-msg-banner">
-        <div style="font-weight: 900; font-size: 0.9rem;">📢 رسالة من الإدارة:</div>
-        <div id="noticeText" style="font-size: 0.85rem; margin-top: 5px;"></div>
-    </div>
-
     <div id="authPage" class="section active">
         <div class="card" id="loginBox" style="max-width: 450px; margin: auto;">
             <h2 style="text-align: center;">تسجيل الدخول</h2>
             <input type="text" id="lUser" placeholder="الإيميل أو اليوزر نيم">
             <input type="password" id="lPass" placeholder="كلمة المرور">
-            <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; margin: 5px 0 15px; cursor:pointer">
-                <input type="checkbox" id="remMe" style="width:auto"> تذكرني
-            </label>
             <button class="btn btn-primary" onclick="tryLogin()">دخول</button>
             <button class="btn" style="background:none; color:var(--primary)" onclick="toggleAuth(true)">إنشاء حساب</button>
-        </div>
-        <div class="card hidden" id="regBox" style="max-width: 450px; margin: auto;">
-            <h2 style="text-align: center;">حساب جديد</h2>
-            <input type="text" id="rU" placeholder="اليوزر نيم">
-            <input type="email" id="rE" placeholder="الإيميل">
-            <input type="password" id="rP" placeholder="كلمة المرور">
-            <input type="password" id="rPC" placeholder="تأكيد كلمة المرور">
-            <button class="btn btn-primary" onclick="handleReg()">تسجيل</button>
-            <button class="btn" style="background:none; color:var(--text)" onclick="toggleAuth(false)">رجوع</button>
         </div>
     </div>
 
@@ -133,44 +99,23 @@
                 <div class="counters-grid" id="cList"></div>
                 <button class="btn btn-success" style="margin-top:20px" onclick="transferStats()">نقل للإحصائيات وتصفير ➡️</button>
             </div>
+
             <div class="divider"></div>
+
             <div class="column-left">
                 <h2 style="text-align: center; margin-top:0">📈 سجل الإحصائيات</h2>
-                <div id="sList"></div>
+                <div id="sList">
+                    </div>
             </div>
         </div>
     </div>
 
-    <div id="notesPage" class="section">
-        <div class="card" style="max-width: 600px; margin: auto;">
-            <h3>📝 ملاحظة جديدة</h3>
-            <textarea id="ntIn" placeholder="اكتب ملاحظتك هنا..." rows="4"></textarea>
-            <button class="btn btn-primary" onclick="addNote()">حفظ الملاحظة</button>
-        </div>
-        <div id="nList" style="max-width: 600px; margin: 20px auto;"></div>
     </div>
-
-    <div id="settingsPage" class="section">
-        <div class="card" style="max-width: 500px; margin: auto;">
-            <h3>⚙️ الإعدادات الحالية</h3>
-            <div id="accDetails">
-                <div class="setting-row"><span>اليوزر:</span> <b id="dispU">-</b></div>
-                <div class="setting-row"><span>الإيميل:</span> <b id="dispE">-</b></div>
-            </div>
-            <hr style="border:0.1px solid var(--border); margin:20px 0">
-            <h3>تعديل البيانات</h3>
-            <input type="text" id="eU" placeholder="يوزر جديد">
-            <input type="email" id="eE" placeholder="إيميل جديد">
-            <button class="btn btn-primary" onclick="updateProfile()">تحديث المعلومات</button>
-            <button class="btn btn-danger" style="margin-top:10px" onclick="logout()">خروج</button>
-        </div>
-    </div>
-</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -186,18 +131,14 @@
     const auth = getAuth(app);
 
     let curUser = null;
-    let userData = null;
     let localCounters = [];
-    let currentNoticeId = null; 
-    
-    const ADMIN_USERNAME = "Anwar";
 
+    // --- نظام التنقل ---
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         const target = document.getElementById(id + 'Page');
         if(target) target.classList.add('active');
         if(document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
-        if(id === 'settings') renderSettings();
     };
 
     window.toggleSidebar = () => {
@@ -205,323 +146,103 @@
         document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
     };
 
-    window.toggleAuth = (reg) => {
-        document.getElementById('loginBox').classList.toggle('hidden', reg);
-        document.getElementById('regBox').classList.toggle('hidden', !reg);
-    };
-
-    window.showAlert = (title, msg, type = 'ok', onConfirm = null, defaultValue = '') => {
-        const modal = document.getElementById('sysModal');
-        const btns = document.getElementById('sysBtns');
-        const msgArea = document.getElementById('sysMsg');
-        document.getElementById('sysTitle').innerText = title;
-        
-        if (type === 'edit') {
-            msgArea.innerHTML = `<textarea id="modalInput" rows="5" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:10px;">${defaultValue}</textarea>`;
-        } else if (type === 'broadcast') {
-            msgArea.innerHTML = `
-                <textarea id="bcMsg" placeholder="اكتب التعميم هنا..." rows="4"></textarea>
-                <div style="text-align:right; font-size:0.8rem; margin:10px 0">مدة العرض:</div>
-                <select id="bcTime">
-                    <option value="0">بدون مؤقت (يدوي)</option>
-                    <option value="1">ساعة واحدة</option>
-                    <option value="6">6 ساعات</option>
-                    <option value="24">يوم كامل</option>
-                </select>
-            `;
-        } else {
-            msgArea.innerHTML = `<p>${msg}</p>`;
-        }
-        
-        btns.innerHTML = '';
-        if(type === 'ok') {
-            btns.innerHTML = `<button class="btn btn-primary" onclick="closeAlert()">موافق</button>`;
-        } else if (type === 'confirm' || type === 'edit') {
-            const yes = document.createElement('button'); 
-            yes.className = 'btn btn-primary'; 
-            yes.innerText = type === 'edit' ? 'حفظ' : 'تأكيد';
-            yes.onclick = async () => { 
-                const value = type === 'edit' ? document.getElementById('modalInput').value : null;
-                if(onConfirm) await onConfirm(value); 
-                closeAlert(); 
-            };
-            const no = document.createElement('button'); 
-            no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
-            no.innerText = 'إلغاء'; no.onclick = closeAlert;
-            btns.appendChild(yes); btns.appendChild(no);
-        } else if (type === 'broadcast') {
-            const sendBtn = document.createElement('button');
-            sendBtn.className = 'btn btn-admin';
-            sendBtn.innerText = 'إرسال الآن';
-            sendBtn.onclick = async () => {
-                const text = document.getElementById('bcMsg').value;
-                const hours = parseInt(document.getElementById('bcTime').value);
-                if(onConfirm) await onConfirm({text, hours});
-                closeAlert();
-            };
-            
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn btn-danger';
-            delBtn.innerText = 'حذف التعميم الحالي';
-            delBtn.onclick = async () => {
-                if(currentNoticeId) {
-                    await deleteDoc(doc(db, "system_notices", currentNoticeId));
-                    showAlert("تم", "تم حذف التعميم بنجاح");
-                } else {
-                    alert("لا يوجد تعميم نشط لحذفه");
-                }
-            };
-
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = 'btn';
-            cancelBtn.style.background = '#475569'; cancelBtn.style.color = 'white';
-            cancelBtn.innerText = 'إلغاء';
-            cancelBtn.onclick = closeAlert;
-            
-            btns.appendChild(sendBtn);
-            btns.appendChild(delBtn);
-            btns.appendChild(cancelBtn);
-        }
-        modal.style.display = 'flex';
-    };
-    window.closeAlert = () => document.getElementById('sysModal').style.display = 'none';
-
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => {
         if (user) {
             curUser = user;
-            const uDoc = await getDoc(doc(db, "users", user.uid));
-            if(uDoc.exists()) {
-                userData = uDoc.data();
-                if(userData.u === ADMIN_USERNAME) {
-                    document.getElementById('adminLink').classList.remove('hidden');
-                }
-            }
-            document.getElementById('hamBtn').style.display = 'block';
             nav('counter');
             initListeners();
-            listenToAnnouncements();
         } else {
             nav('auth');
-            document.getElementById('hamBtn').style.display = 'none';
-            document.getElementById('globalNotice').style.display = 'none';
-            document.getElementById('adminLink').classList.add('hidden');
         }
     });
 
-    function listenToAnnouncements() {
-        const q = query(collection(db, "system_notices"), orderBy("createdAt", "desc"), limit(1));
-        onSnapshot(q, async (snap) => {
-            if(!snap.empty) {
-                const noticeDoc = snap.docs[0];
-                const data = noticeDoc.data();
-                currentNoticeId = noticeDoc.id;
-
-                if(data.expiresAt && Date.now() > data.expiresAt) {
-                    await deleteDoc(doc(db, "system_notices", currentNoticeId));
-                    document.getElementById('globalNotice').style.display = 'none';
-                } else {
-                    document.getElementById('noticeText').innerText = data.text;
-                    document.getElementById('globalNotice').style.display = 'block';
-                }
-            } else {
-                currentNoticeId = null;
-                document.getElementById('globalNotice').style.display = 'none';
-            }
-        });
-    }
-
-    window.openAdminBroadcast = () => {
-        showAlert("📢 إدارة التعميمات", "", "broadcast", async (data) => {
-            if(data.text && data.text.trim() !== "") {
-                const expiry = data.hours > 0 ? (Date.now() + (data.hours * 60 * 60 * 1000)) : null;
-                await addDoc(collection(db, "system_notices"), {
-                    text: data.text,
-                    sender: userData.u,
-                    createdAt: Date.now(),
-                    expiresAt: expiry
-                });
-                showAlert("تم", "تم إرسال التعميم بنجاح");
-            }
-        });
-    };
-
-    window.tryLogin = async () => {
-        const id = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
-        const remember = document.getElementById('remMe').checked;
-        try {
-            await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-            let email = id;
-            if(!id.includes('@')) {
-                const q = query(collection(db, "users"), where("u", "==", id));
-                const snap = await getDocs(q);
-                if(snap.empty) throw new Error("المستخدم غير موجود");
-                email = snap.docs[0].data().e;
-            }
-            await signInWithEmailAndPassword(auth, email, p);
-        } catch (e) { showAlert("خطأ", "بيانات الدخول غير صحيحة"); }
-    };
-
-    window.handleReg = async () => {
-        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value;
-        try {
-            const res = await createUserWithEmailAndPassword(auth, e, p);
-            await setDoc(doc(db, "users", res.user.uid), { u, e, createdAt: Date.now() });
-            showAlert("نجاح", "تم إنشاء الحساب");
-            toggleAuth(false);
-        } catch (err) { showAlert("فشل", err.message); }
-    };
-
+    // --- إدارة العدادات ---
     window.addCounter = async () => {
         const n = document.getElementById('cn').value, g = document.getElementById('cg').value;
         if(!n || !g) return;
-        const orderValue = localCounters.length > 0 ? Math.max(...localCounters.map(c => c.ord || 0)) + 1 : 0;
         await addDoc(collection(db, "users", curUser.uid, "counters"), { 
-            n, g: parseInt(g), c: 0, ord: orderValue, createdAt: Date.now() 
+            n, g: parseInt(g), c: 0, ord: localCounters.length, createdAt: Date.now() 
         });
         document.getElementById('cn').value = ''; document.getElementById('cg').value = '';
-    };
-
-    window.moveCounter = async (id, direction) => {
-        const idx = localCounters.findIndex(c => c.id === id);
-        if (idx === -1) return;
-        const newIdx = idx + direction;
-        if (newIdx < 0 || newIdx >= localCounters.length) return;
-        const current = localCounters[idx], target = localCounters[newIdx];
-        const batch = writeBatch(db);
-        batch.update(doc(db, "users", curUser.uid, "counters", current.id), { ord: target.ord || 0 });
-        batch.update(doc(db, "users", curUser.uid, "counters", target.id), { ord: current.ord || 0 });
-        await batch.commit();
     };
 
     window.updateCount = async (id, val) => {
         await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
     };
 
+    // --- نقل البيانات للسجل (الريبورتات) ---
     window.transferStats = async () => {
-        if(localCounters.length === 0) {
-            showAlert("تنبيه", "لا توجد عدادات نشطة لنقلها حالياً");
-            return;
-        }
-
-        let dataToSave = [];
+        if(localCounters.length === 0) return;
+        const dataToSave = localCounters.map(c => ({ n: c.n, c: c.c }));
         const batch = writeBatch(db);
-
-        localCounters.forEach(c => {
-            dataToSave.push({
-                n: c.n,
-                c: c.c,
-                g: c.g
-            });
-            batch.update(doc(db, "users", curUser.uid, "counters", c.id), { c: 0 });
+        
+        await addDoc(collection(db, "users", curUser.uid, "stats"), {
+            title: "سجل " + new Date().toLocaleDateString('ar-EG'),
+            date: new Date().toLocaleString('ar-EG'),
+            data: dataToSave,
+            createdAt: Date.now()
         });
 
-        try {
-            await addDoc(collection(db, "users", curUser.uid, "stats"), {
-                title: "سجل يوم " + new Date().toLocaleDateString('ar-EG'),
-                date: new Date().toLocaleString('ar-EG'),
-                data: dataToSave,
-                createdAt: Date.now()
-            });
-            await batch.commit();
-            showAlert("تم النقل", "تم حفظ الإحصائيات الحالية وتصفير جميع العدادات");
-        } catch (e) {
-            showAlert("خطأ", "فشل في عملية النقل: " + e.message);
-        }
+        localCounters.forEach(c => {
+            batch.update(doc(db, "users", curUser.uid, "counters", c.id), { c: 0 });
+        });
+        await batch.commit();
+        alert("تم الحفظ في السجل وتصفير العدادات");
     };
 
-    window.addNote = async () => {
-        const t = document.getElementById('ntIn').value;
-        if(!t) return;
-        await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
-        document.getElementById('ntIn').value = '';
-    };
-
-    window.editNote = async (id, currentText) => {
-        showAlert("تعديل الملاحظة ✏️", "", "edit", async (newText) => {
-            if (newText && newText.trim() !== "" && newText !== currentText) {
-                await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
-            }
-        }, currentText);
-    };
-
-    window.renderSettings = async () => {
-        const d = await getDoc(doc(db, "users", curUser.uid));
-        if(d.exists()){
-            const data = d.data();
-            document.getElementById('dispU').innerText = data.u || '-';
-            document.getElementById('dispE').innerText = data.e || '-';
-        }
-    };
-
-    window.updateProfile = async () => {
-        const u = document.getElementById('eU').value, e = document.getElementById('eE').value;
-        let up = {};
-        if(u) up.u = u; if(e) up.e = e;
-        if(Object.keys(up).length === 0) return;
-        await updateDoc(doc(db, "users", curUser.uid), up);
-        showAlert("تم", "تم تحديث البيانات"); 
-        renderSettings();
-        document.getElementById('eU').value=''; document.getElementById('eE').value='';
-    };
-
+    // --- المراقبة الحية للبيانات ---
     function initListeners() {
+        // تحديث العدادات
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("ord", "asc")), (snap) => {
             localCounters = [];
-            snap.forEach(docSnap => localCounters.push({ id: docSnap.id, ...docSnap.data() }));
-
-            // --- الفرز التلقائي: العدادات المكتملة تنزل للأسفل تلقائياً ---
-            let sortedCounters = [...localCounters].sort((a, b) => {
-                const aDone = a.c >= a.g;
-                const bDone = b.c >= b.g;
-                // إذا كان a مكتمل و b غير مكتمل، a يذهب للأسفل (1)
-                if (aDone && !bDone) return 1;
-                // إذا كان b مكتمل و a غير مكتمل، b يذهب للأسفل (-1)
-                if (!aDone && bDone) return -1;
-                // إذا كان كلاهما مكتمل أو كلاهما لا، نحافظ على ترتيب ord الأصلي
-                return 0;
-            });
-
             let h = '';
-            sortedCounters.forEach(x => {
-                const isDone = x.c >= x.g;
-                const remaining = x.g - x.c;
-                let statusHtml = isDone ? `<span class="status-msg msg-success">اويلي ياشيخ انا اشهد انك كفو 🫡</span>` : `<span class="status-msg msg-info">باقيلك: <b>${remaining}</b> لتوصل لـ ${x.g}</span>`;
-                h += `<div class="counter-item ${isDone ? 'completed' : ''}">
-                    <div class="move-btns"><button class="m-btn" onclick="moveCounter('${x.id}', -1)">▲</button><button class="m-btn" onclick="moveCounter('${x.id}', 1)">▼</button></div>
-                    <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${x.id}')">×</button>
-                    <b style="font-size:0.8rem">${x.n}</b>
-                    <div class="c-btns"><button class="c-btn" onclick="updateCount('${x.id}', ${x.c + 1})">+</button><span style="font-weight:900">${x.c}</span><button class="c-btn" onclick="updateCount('${x.id}', ${x.c - 1})">-</button></div>
-                    ${statusHtml}
-                </div>`;
+            snap.forEach(docSnap => {
+                const x = docSnap.data();
+                const id = docSnap.id;
+                localCounters.push({ id, ...x });
+                h += `<div class="counter-item">
+                        <b>${x.n}</b>
+                        <div class="c-btns">
+                            <button class="c-btn" onclick="updateCount('${id}', ${x.c + 1})">+</button>
+                            <span>${x.c}</span>
+                            <button class="c-btn" onclick="updateCount('${id}', ${x.c - 1})">-</button>
+                        </div>
+                        <small>الهدف: ${x.g}</small>
+                        <button style="display:block; margin:5px auto; color:var(--danger); background:none; border:none; cursor:pointer" onclick="delGen('counters','${id}')">حذف</button>
+                    </div>`;
             });
             document.getElementById('cList').innerHTML = h;
         });
 
-        onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
-            let h = '';
-            snap.forEach(docSnap => {
-                const n = docSnap.data(), id = docSnap.id;
-                h += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
-                    <div style="display:flex; gap:5px; margin-top:10px"><button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`)">تعديل ✏️</button><button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button></div></div>`;
-            });
-            document.getElementById('nList').innerHTML = h;
-        });
-
+        // تحديث السجل (الريبورتات) - هذا هو الجزء الذي كان مفقوداً أو لا يعمل بوضوح
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
                 const s = docSnap.data(), id = docSnap.id;
                 let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
-                h += `<div class="card"><div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px"><b style="color:var(--admin); cursor:pointer" onclick="editStatName('${id}','${s.title}')">${s.title} ✏️</b><span>${s.date}</span></div>
-                    <table><thead><tr><th>العداد</th><th>العدد</th></tr></thead><tbody>${rows}</tbody></table><button class="btn btn-danger" style="padding:5px; margin-top:10px" onclick="delGen('stats','${id}')">حذف السجل</button></div>`;
+                h += `<div class="card">
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:10px">
+                            <b style="color:var(--admin)">${s.title}</b>
+                            <span>${s.date}</span>
+                        </div>
+                        <table>
+                            <thead><tr><th>العداد</th><th>العدد</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                        <button class="btn btn-danger" style="padding:5px; margin-top:10px; font-size:0.7rem" onclick="delGen('stats','${id}')">حذف السجل</button>
+                      </div>`;
             });
-            document.getElementById('sList').innerHTML = h;
+            document.getElementById('sList').innerHTML = h || '<p style="text-align:center; color:#94a3b8">لا يوجد سجلات حالياً</p>';
         });
     }
 
+    window.delGen = async (col, id) => {
+        if(confirm("هل أنت متأكد من الحذف؟")) {
+            await deleteDoc(doc(db, "users", curUser.uid, col, id));
+        }
+    };
+
     window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
-    window.editStatName = async (id, old) => { showAlert("تعديل اسم السجل", "", "edit", async (newName) => { if(newName && newName !== old) { await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newName }); } }, old); };
 </script>
 </body>
 </html>
