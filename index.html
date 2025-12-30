@@ -6,7 +6,7 @@
     <title>ANWAR CLOUD</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --primary: #6366f1; --text: #f8fafc; --border: #334155; --success: #10b981; --danger: #ef4444; --admin: #f59e0b; }
+        :root { --bg: #0f172a; --card: #1e293b; --primary: #6366f1; --discord: #5865F2; --text: #f8fafc; --border: #334155; --success: #10b981; --danger: #ef4444; --admin: #f59e0b; }
         body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
         
         header { background: var(--card); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
@@ -34,6 +34,7 @@
         input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #f1f5f9; color: #1e293b; font-family: 'Cairo'; box-sizing: border-box; font-weight: bold; }
         .btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-discord { background: var(--discord); color: white; margin-top: 10px; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-admin { background: var(--admin); color: white; }
@@ -87,6 +88,7 @@
 
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-item" onclick="nav('counter')">📊 العدادات والسجل</div>
+    <div class="sidebar-item" onclick="nav('reports')">📢 ريبورتات</div>
     <div class="sidebar-item" onclick="nav('notes')">📝 الملاحظات</div>
     <div class="sidebar-item" onclick="nav('settings')">⚙️ الإعدادات</div>
     <div id="adminLink" class="sidebar-item hidden" style="color:var(--admin)" onclick="openAdminBroadcast()">📢 إرسال تعميم</div>
@@ -108,6 +110,7 @@
                 <input type="checkbox" id="remMe" style="width:auto"> تذكرني
             </label>
             <button class="btn btn-primary" onclick="tryLogin()">دخول</button>
+            <button class="btn btn-discord" onclick="loginWithDiscord()">الدخول عبر ديسكورد 🎮</button>
             <button class="btn" style="background:none; color:var(--primary)" onclick="toggleAuth(true)">إنشاء حساب</button>
         </div>
         <div class="card hidden" id="regBox" style="max-width: 450px; margin: auto;">
@@ -118,6 +121,45 @@
             <input type="password" id="rPC" placeholder="تأكيد كلمة المرور">
             <button class="btn btn-primary" onclick="handleReg()">تسجيل</button>
             <button class="btn" style="background:none; color:var(--text)" onclick="toggleAuth(false)">رجوع</button>
+        </div>
+    </div>
+
+    <div id="reportsPage" class="section">
+        <div class="card" style="max-width: 700px; margin: auto;">
+            <h2 style="text-align: center; margin-bottom: 20px;">نظام الريبورتات 📢</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="font-size: 0.8rem;">ID اللاعب:</label>
+                    <input type="text" id="repId" placeholder="مثال: 120">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem;">Discord ID:</label>
+                    <input type="text" id="repDiscord" placeholder="مثال: 456789123">
+                </div>
+            </div>
+
+            <label style="display:block; margin-top:10px;">اختر التصنيف:</label>
+            <select id="repCat" onchange="updateRepSubOptions()">
+                <option value="">-- اختر السبب --</option>
+                <option value="reportr">Reportr</option>
+                <option value="summon">ريبورتات الاستدعاء</option>
+                <option value="steam">الريبورت الخاص بـ Steam</option>
+                <option value="clothes">ريبورتات الملابس</option>
+                <option value="rp">ريبورتات الـ RP</option>
+                <option value="gangs">ريبورتات الإجرام والعصابات والعساكر</option>
+                <option value="general">ريبورتات عامة</option>
+            </select>
+
+            <label style="display:block; margin-top:10px;">الرسالة (السبب التفصيلي):</label>
+            <select id="repSub">
+                <option value="">-- اختر التصنيف أولاً --</option>
+            </select>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px;">
+                <button class="btn btn-primary" onclick="copyReport('in')">📋 نسخ داخل السيرفر</button>
+                <button class="btn btn-success" onclick="copyReport('out')">🌐 نسخ خارج السيرفر</button>
+            </div>
         </div>
     </div>
 
@@ -156,6 +198,7 @@
             <div id="accDetails">
                 <div class="setting-row"><span>اليوزر:</span> <b id="dispU">-</b></div>
                 <div class="setting-row"><span>الإيميل:</span> <b id="dispE">-</b></div>
+                <div class="setting-row"><span>ديسكورد:</span> <button class="btn btn-discord" style="width:auto; padding:5px 15px" onclick="linkDiscord()">ربط ديسكورد</button></div>
             </div>
             <hr style="border:0.1px solid var(--border); margin:20px 0">
             <h3>تعديل البيانات</h3>
@@ -170,7 +213,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, OAuthProvider, signInWithRedirect, getRedirectResult, linkWithRedirect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -184,6 +227,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const discordProvider = new OAuthProvider('oidc.discord');
 
     let curUser = null;
     let userData = null;
@@ -191,6 +235,57 @@
     let currentNoticeId = null; 
     
     const ADMIN_USERNAME = "Anwar";
+
+    const repData = {
+        reportr: ["يرجى شرح مشكلتك لكي يتم خدمتك", "توجه للدعم الفني مع مايثبت ذلك", "سيتم خدمتك الان", "هل تم خدمتك بالشكل المطلوب؟", "سيتم التاكد من الموضوع , كذللك احتياطًا يرجى منك حفظ تصويرك اخر 20 دقيقه في حال الاحتياج له سيتم استدعائك"],
+        summon: ["استدعاء يخص المراقبة الدورية توجه للدعم مع تصوير 20 دقيقة", "احفظ تصوير اخر 20 دقيقه من الان وبعد الانتهاء من السيناريو توجه لدعم الفني مباشره", "استدعاء توجه للدعم الفني مع تصوير اخر 20 دقيقه"],
+        steam: ["الرجاء منك تغيير اسم ستيمك وفايف ام ويكون مطابق لاسم الدسكورد الخاص بك , وعدم تسميته ب اسم عربي او ارقام او زخرفة .. ادارة مستري تاون تتمنى لك يوم ممتع"],
+        clothes: ["يجب عليك لبس مناسب للمكان و تطبيق الاربي المناسب للمكان", "يجب عليك تغيير لبسك و مواكبة الأربي بإرتداء لبس مناسب لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع", "يجب عليك لبس حذاء لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع", "يجب عليك تغيير لبسك و عدم مخالفة تعميم الملابس لتجنب المحاسبة الادارية", "يرجى منك التوجه لاقرب محل ملابس و تغير الحزام بسبب انه خاص للعساكر فقط و اداره ميستري تاون تتمني لك وقتا ممتعا", "يجب عليك تعديل ملابسك لتتناسب مع وظيفتك، لتجنب المحاسبة الإدارية"],
+        rp: ["يجب عليك تقدير موقفك في اي حالة كنت متواجد فيها وقياسها بالحياة الواقعيه, وادارة مستري تاون تتمنى لك يوم ممتع", "يجب عليك تقدير موقفك وتقمص شخصية المصاب وقياسها بالحياة الواقعيه .ادارة مستري تاون تتمنى لك يوم ممتع", "يمنع منعا باتا الخروج عن الرول بلاي او التلميح خارج الار بي لتجنب المحاسبة الادارية", "يجب عليك ايقاف مركبتك بالشكل المناسب في المناطق الامنة تجنبا للمحاسبة الادارية , ادارة ميستري تاون تتمنى لك يوما ممتعا"],
+        gangs: ["يمنع منعاً باتاً القيام بأي أعمال (التقديح والاسلوب السيء) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنباً للمحاسبة الادارية ، وادارة مستري تاون تتمنى لك وقتاً ممتعاً", "يمنع منعاً باتا التخريم او اطلاق النار خلف الجدران لتجنب المحاسبة الادارية", "يمنع اعطاء كول والتكلم باريحيه وانت مسقط , ويجب عليك تقمص دور المصاب , تجنبا من المحاسبة الادارية", "عزيزي اللاعب يجب عليك التخطيط قبل بدء السرقة ومع التأكد من العدد المشاكرين بالسيناريو , ادارة مستري تتمنى لك يوم ممتع", "عزيزي المواطن , للتذكير يمنع كلبشة شخص بدون رفع اليد ويجب عليك الانتظار , خلاف ذالك بيتم محاسبتك بمحاسبة اداريا صارمه", "يجب عليك تقدير قيمة مركبتك والقيادة بشكل سليم و تجنب النقزات الغير واقعية, وتقدير حياتك وعدم صدم الاخريين , ادارة مستري تاون تتمنى لك يومأ ممتعأ", "يمنع الحلف باي طريقة كانت ويجب عليك تقمص الحياة الواقعيه وابعاد امور الدين بشكل عام تجنباً للمحاسبة الاداريه، وادارة مستري تاون تتمنى لك وقتاً ممتعاً", "يجب ان يكون التهديد بشكل مباشر و يمنع التهديد من داخل المركبة"],
+        general: ["يجب عليك طلب ومسعف والانتظار , ويمنع نقل المسقط بدون طلب مسعف , خلاف ذلك بيتم محاسبتك اداريًا", "يمنع منعًا باتًا معالجة شخص في حال تواجد المسعفين لتجنب المحاسبة الادارية", "في حال إزالة اربع من اطارات السيارة يمنع استكمال القيادة بها", "يمنع حمل اللاعب اثناء ركوب الدباب ايضًا المركبة", "يمنع إرتداء او إستعمال اي خوذة اثناء مشاركتك في اي إطلاق ناري", "يمنع الكذب بالمصطلحات الاتية ( سحر او باخذ حبة او صداع والخ ) .. يعرضك للمحاسبة الادارية", "يمنع منعًا باتًا القيام بأي أعمال ( التقديح والاسلوب السيء ) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنبًا للمحاسبة الادارية .. إدارة ميستري تاون تتمنى لك يومًا ممتعًا", "يمنع عليك تكرار البلاغات والسبام بالبلاغات العسكرية او الصحة , في حال تكرارها سيتم محاسبتك اداريًا"]
+    };
+
+    // --- Discord Methods ---
+    window.loginWithDiscord = async () => {
+        try {
+            await signInWithRedirect(auth, discordProvider);
+        } catch (e) {
+            showAlert("خطأ", "فشل بدء تسجيل الدخول عبر ديسكورد");
+        }
+    };
+
+    window.linkDiscord = async () => {
+        if(!auth.currentUser) return;
+        try {
+            await linkWithRedirect(auth.currentUser, discordProvider);
+        } catch (e) {
+            showAlert("خطأ", "فشل بدء عملية الربط");
+        }
+    };
+
+    async function checkRedirect() {
+        try {
+            const result = await getRedirectResult(auth);
+            if (result && result.user) {
+                const user = result.user;
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if(!uDoc.exists()) {
+                    await setDoc(doc(db, "users", user.uid), {
+                        u: user.displayName || "Discord User",
+                        e: user.email,
+                        createdAt: Date.now()
+                    });
+                }
+                showAlert("تم", "تم تسجيل الدخول بنجاح عبر ديسكورد ✅");
+            }
+        } catch (e) {
+            if(e.code === 'auth/credential-already-in-use') {
+                showAlert("خطأ", "هذا الحساب مرتبط بمستخدم آخر بالفعل.");
+            }
+        }
+    }
+    checkRedirect();
 
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -205,6 +300,29 @@
         document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
     };
 
+    window.updateRepSubOptions = () => {
+        const cat = document.getElementById('repCat').value;
+        const sub = document.getElementById('repSub');
+        sub.innerHTML = '<option value="">-- اختر الرد --</option>';
+        if(cat && repData[cat]) {
+            repData[cat].forEach(t => {
+                const o = document.createElement('option');
+                o.value = t; o.innerText = t.substring(0, 60) + (t.length > 60 ? "..." : "");
+                sub.appendChild(o);
+            });
+        }
+    };
+
+    window.copyReport = async (mode) => {
+        const id = document.getElementById('repId').value;
+        const disc = document.getElementById('repDiscord').value;
+        const reason = document.getElementById('repSub').value;
+        if(!reason) return showAlert("خطأ", "يرجى اختيار سبب الريبورت أولاً");
+        let text = (mode === 'in') ? `/reportr ${id} ${reason}` : `${reason}\n<@${disc}>`;
+        await navigator.clipboard.writeText(text);
+        showAlert("تم النسخ ✅", "تم نسخ نص الريبورت بنجاح");
+    };
+
     window.toggleAuth = (reg) => {
         document.getElementById('loginBox').classList.toggle('hidden', reg);
         document.getElementById('regBox').classList.toggle('hidden', !reg);
@@ -215,72 +333,25 @@
         const btns = document.getElementById('sysBtns');
         const msgArea = document.getElementById('sysMsg');
         document.getElementById('sysTitle').innerText = title;
-        
         if (type === 'edit') {
             msgArea.innerHTML = `<textarea id="modalInput" rows="5" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:10px;">${defaultValue}</textarea>`;
         } else if (type === 'broadcast') {
-            msgArea.innerHTML = `
-                <textarea id="bcMsg" placeholder="اكتب التعميم هنا..." rows="4"></textarea>
-                <div style="text-align:right; font-size:0.8rem; margin:10px 0">مدة العرض:</div>
-                <select id="bcTime">
-                    <option value="0">بدون مؤقت (يدوي)</option>
-                    <option value="1">ساعة واحدة</option>
-                    <option value="6">6 ساعات</option>
-                    <option value="24">يوم كامل</option>
-                </select>
-            `;
+            msgArea.innerHTML = `<textarea id="bcMsg" placeholder="اكتب التعميم هنا..." rows="4"></textarea><select id="bcTime"><option value="0">بدون مؤقت</option><option value="1">ساعة</option><option value="24">يوم</option></select>`;
         } else {
             msgArea.innerHTML = `<p>${msg}</p>`;
         }
-        
         btns.innerHTML = '';
         if(type === 'ok') {
             btns.innerHTML = `<button class="btn btn-primary" onclick="closeAlert()">موافق</button>`;
         } else if (type === 'confirm' || type === 'edit') {
-            const yes = document.createElement('button'); 
-            yes.className = 'btn btn-primary'; 
-            yes.innerText = type === 'edit' ? 'حفظ' : 'تأكيد';
-            yes.onclick = async () => { 
-                const value = type === 'edit' ? document.getElementById('modalInput').value : null;
-                if(onConfirm) await onConfirm(value); 
-                closeAlert(); 
-            };
-            const no = document.createElement('button'); 
-            no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
-            no.innerText = 'إلغاء'; no.onclick = closeAlert;
+            const yes = document.createElement('button'); yes.className = 'btn btn-primary'; yes.innerText = 'تأكيد';
+            yes.onclick = async () => { if(onConfirm) await onConfirm(type === 'edit' ? document.getElementById('modalInput').value : null); closeAlert(); };
+            const no = document.createElement('button'); no.className = 'btn'; no.innerText = 'إلغاء'; no.onclick = closeAlert;
             btns.appendChild(yes); btns.appendChild(no);
         } else if (type === 'broadcast') {
-            const sendBtn = document.createElement('button');
-            sendBtn.className = 'btn btn-admin';
-            sendBtn.innerText = 'إرسال الآن';
-            sendBtn.onclick = async () => {
-                const text = document.getElementById('bcMsg').value;
-                const hours = parseInt(document.getElementById('bcTime').value);
-                if(onConfirm) await onConfirm({text, hours});
-                closeAlert();
-            };
-            
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn btn-danger';
-            delBtn.innerText = 'حذف التعميم الحالي';
-            delBtn.onclick = async () => {
-                if(currentNoticeId) {
-                    await deleteDoc(doc(db, "system_notices", currentNoticeId));
-                    showAlert("تم", "تم حذف التعميم بنجاح");
-                } else {
-                    alert("لا يوجد تعميم نشط لحذفه");
-                }
-            };
-
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = 'btn';
-            cancelBtn.style.background = '#475569'; cancelBtn.style.color = 'white';
-            cancelBtn.innerText = 'إلغاء';
-            cancelBtn.onclick = closeAlert;
-            
+            const sendBtn = document.createElement('button'); sendBtn.className = 'btn btn-admin'; sendBtn.innerText = 'إرسال';
+            sendBtn.onclick = async () => { if(onConfirm) await onConfirm({text: document.getElementById('bcMsg').value, hours: parseInt(document.getElementById('bcTime').value)}); closeAlert(); };
             btns.appendChild(sendBtn);
-            btns.appendChild(delBtn);
-            btns.appendChild(cancelBtn);
         }
         modal.style.display = 'flex';
     };
@@ -292,9 +363,7 @@
             const uDoc = await getDoc(doc(db, "users", user.uid));
             if(uDoc.exists()) {
                 userData = uDoc.data();
-                if(userData.u === ADMIN_USERNAME) {
-                    document.getElementById('adminLink').classList.remove('hidden');
-                }
+                if(userData.u === ADMIN_USERNAME) document.getElementById('adminLink').classList.remove('hidden');
             }
             document.getElementById('hamBtn').style.display = 'block';
             nav('counter');
@@ -303,62 +372,38 @@
         } else {
             nav('auth');
             document.getElementById('hamBtn').style.display = 'none';
-            document.getElementById('globalNotice').style.display = 'none';
-            document.getElementById('adminLink').classList.add('hidden');
         }
     });
 
     function listenToAnnouncements() {
         const q = query(collection(db, "system_notices"), orderBy("createdAt", "desc"), limit(1));
-        onSnapshot(q, async (snap) => {
+        onSnapshot(q, (snap) => {
             if(!snap.empty) {
-                const noticeDoc = snap.docs[0];
-                const data = noticeDoc.data();
-                currentNoticeId = noticeDoc.id;
-
-                if(data.expiresAt && Date.now() > data.expiresAt) {
-                    await deleteDoc(doc(db, "system_notices", currentNoticeId));
-                    document.getElementById('globalNotice').style.display = 'none';
-                } else {
-                    document.getElementById('noticeText').innerText = data.text;
-                    document.getElementById('globalNotice').style.display = 'block';
-                }
-            } else {
-                currentNoticeId = null;
-                document.getElementById('globalNotice').style.display = 'none';
+                const data = snap.docs[0].data();
+                document.getElementById('noticeText').innerText = data.text;
+                document.getElementById('globalNotice').style.display = 'block';
             }
         });
     }
 
     window.openAdminBroadcast = () => {
-        showAlert("📢 إدارة التعميمات", "", "broadcast", async (data) => {
-            if(data.text && data.text.trim() !== "") {
-                const expiry = data.hours > 0 ? (Date.now() + (data.hours * 60 * 60 * 1000)) : null;
-                await addDoc(collection(db, "system_notices"), {
-                    text: data.text,
-                    sender: userData.u,
-                    createdAt: Date.now(),
-                    expiresAt: expiry
-                });
-                showAlert("تم", "تم إرسال التعميم بنجاح");
-            }
+        showAlert("📢 إرسال تعميم", "", "broadcast", async (data) => {
+            if(data.text) await addDoc(collection(db, "system_notices"), { text: data.text, createdAt: Date.now() });
         });
     };
 
     window.tryLogin = async () => {
         const id = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
-        const remember = document.getElementById('remMe').checked;
         try {
-            await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
             let email = id;
             if(!id.includes('@')) {
                 const q = query(collection(db, "users"), where("u", "==", id));
                 const snap = await getDocs(q);
-                if(snap.empty) throw new Error("المستخدم غير موجود");
+                if(snap.empty) throw new Error();
                 email = snap.docs[0].data().e;
             }
             await signInWithEmailAndPassword(auth, email, p);
-        } catch (e) { showAlert("خطأ", "بيانات الدخول غير صحيحة"); }
+        } catch (e) { showAlert("خطأ", "بيانات الدخول خاطئة"); }
     };
 
     window.handleReg = async () => {
@@ -366,31 +411,14 @@
         try {
             const res = await createUserWithEmailAndPassword(auth, e, p);
             await setDoc(doc(db, "users", res.user.uid), { u, e, createdAt: Date.now() });
-            showAlert("نجاح", "تم إنشاء الحساب");
             toggleAuth(false);
         } catch (err) { showAlert("فشل", err.message); }
     };
 
     window.addCounter = async () => {
         const n = document.getElementById('cn').value, g = document.getElementById('cg').value;
-        if(!n || !g) return;
-        const orderValue = localCounters.length > 0 ? Math.max(...localCounters.map(c => c.ord || 0)) + 1 : 0;
-        await addDoc(collection(db, "users", curUser.uid, "counters"), { 
-            n, g: parseInt(g), c: 0, ord: orderValue, createdAt: Date.now() 
-        });
+        if(n && g) await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g: parseInt(g), c: 0, ord: Date.now(), createdAt: Date.now() });
         document.getElementById('cn').value = ''; document.getElementById('cg').value = '';
-    };
-
-    window.moveCounter = async (id, direction) => {
-        const idx = localCounters.findIndex(c => c.id === id);
-        if (idx === -1) return;
-        const newIdx = idx + direction;
-        if (newIdx < 0 || newIdx >= localCounters.length) return;
-        const current = localCounters[idx], target = localCounters[newIdx];
-        const batch = writeBatch(db);
-        batch.update(doc(db, "users", curUser.uid, "counters", current.id), { ord: target.ord || 0 });
-        batch.update(doc(db, "users", curUser.uid, "counters", target.id), { ord: current.ord || 0 });
-        await batch.commit();
     };
 
     window.updateCount = async (id, val) => {
@@ -398,100 +426,46 @@
     };
 
     window.transferStats = async () => {
-        if(localCounters.length === 0) {
-            showAlert("تنبيه", "لا توجد عدادات نشطة لنقلها حالياً");
-            return;
-        }
-
-        let dataToSave = [];
+        if(localCounters.length === 0) return;
         const batch = writeBatch(db);
-
-        localCounters.forEach(c => {
-            dataToSave.push({
-                n: c.n,
-                c: c.c,
-                g: c.g
-            });
-            batch.update(doc(db, "users", curUser.uid, "counters", c.id), { c: 0 });
-        });
-
-        try {
-            await addDoc(collection(db, "users", curUser.uid, "stats"), {
-                title: "سجل يوم " + new Date().toLocaleDateString('ar-EG'),
-                date: new Date().toLocaleString('ar-EG'),
-                data: dataToSave,
-                createdAt: Date.now()
-            });
-            await batch.commit();
-            showAlert("تم النقل", "تم حفظ الإحصائيات الحالية وتصفير جميع العدادات");
-        } catch (e) {
-            showAlert("خطأ", "فشل في عملية النقل: " + e.message);
-        }
+        let dataToSave = localCounters.map(c => ({ n: c.n, c: c.c, g: c.g }));
+        await addDoc(collection(db, "users", curUser.uid, "stats"), { title: "سجل " + new Date().toLocaleDateString('ar-EG'), date: new Date().toLocaleString('ar-EG'), data: dataToSave, createdAt: Date.now() });
+        localCounters.forEach(c => batch.update(doc(db, "users", curUser.uid, "counters", c.id), { c: 0 }));
+        await batch.commit();
     };
 
     window.addNote = async () => {
         const t = document.getElementById('ntIn').value;
-        if(!t) return;
-        await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
+        if(t) await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
         document.getElementById('ntIn').value = '';
-    };
-
-    window.editNote = async (id, currentText) => {
-        showAlert("تعديل الملاحظة ✏️", "", "edit", async (newText) => {
-            if (newText && newText.trim() !== "" && newText !== currentText) {
-                await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
-            }
-        }, currentText);
     };
 
     window.renderSettings = async () => {
         const d = await getDoc(doc(db, "users", curUser.uid));
         if(d.exists()){
-            const data = d.data();
-            document.getElementById('dispU').innerText = data.u || '-';
-            document.getElementById('dispE').innerText = data.e || '-';
+            document.getElementById('dispU').innerText = d.data().u || '-';
+            document.getElementById('dispE').innerText = d.data().e || '-';
         }
     };
 
     window.updateProfile = async () => {
         const u = document.getElementById('eU').value, e = document.getElementById('eE').value;
-        let up = {};
-        if(u) up.u = u; if(e) up.e = e;
-        if(Object.keys(up).length === 0) return;
-        await updateDoc(doc(db, "users", curUser.uid), up);
-        showAlert("تم", "تم تحديث البيانات"); 
+        let up = {}; if(u) up.u = u; if(e) up.e = e;
+        if(Object.keys(up).length > 0) await updateDoc(doc(db, "users", curUser.uid), up);
         renderSettings();
-        document.getElementById('eU').value=''; document.getElementById('eE').value='';
     };
 
     function initListeners() {
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("ord", "asc")), (snap) => {
             localCounters = [];
-            snap.forEach(docSnap => localCounters.push({ id: docSnap.id, ...docSnap.data() }));
-
-            // --- الفرز التلقائي: العدادات المكتملة تنزل للأسفل تلقائياً ---
-            let sortedCounters = [...localCounters].sort((a, b) => {
-                const aDone = a.c >= a.g;
-                const bDone = b.c >= b.g;
-                // إذا كان a مكتمل و b غير مكتمل، a يذهب للأسفل (1)
-                if (aDone && !bDone) return 1;
-                // إذا كان b مكتمل و a غير مكتمل، b يذهب للأسفل (-1)
-                if (!aDone && bDone) return -1;
-                // إذا كان كلاهما مكتمل أو كلاهما لا، نحافظ على ترتيب ord الأصلي
-                return 0;
-            });
-
             let h = '';
-            sortedCounters.forEach(x => {
+            snap.forEach(docSnap => {
+                const x = docSnap.data(); x.id = docSnap.id; localCounters.push(x);
                 const isDone = x.c >= x.g;
-                const remaining = x.g - x.c;
-                let statusHtml = isDone ? `<span class="status-msg msg-success">اويلي ياشيخ انا اشهد انك كفو 🫡</span>` : `<span class="status-msg msg-info">باقيلك: <b>${remaining}</b> لتوصل لـ ${x.g}</span>`;
                 h += `<div class="counter-item ${isDone ? 'completed' : ''}">
-                    <div class="move-btns"><button class="m-btn" onclick="moveCounter('${x.id}', -1)">▲</button><button class="m-btn" onclick="moveCounter('${x.id}', 1)">▼</button></div>
-                    <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${x.id}')">×</button>
-                    <b style="font-size:0.8rem">${x.n}</b>
-                    <div class="c-btns"><button class="c-btn" onclick="updateCount('${x.id}', ${x.c + 1})">+</button><span style="font-weight:900">${x.c}</span><button class="c-btn" onclick="updateCount('${x.id}', ${x.c - 1})">-</button></div>
-                    ${statusHtml}
+                    <b>${x.n}</b>
+                    <div class="c-btns"><button class="c-btn" onclick="updateCount('${x.id}', ${x.c + 1})">+</button><span>${x.c}</span><button class="c-btn" onclick="updateCount('${x.id}', ${x.c - 1})">-</button></div>
+                    <span class="status-msg">${isDone ? 'كفو 🫡' : 'باقي ' + (x.g - x.c)}</span>
                 </div>`;
             });
             document.getElementById('cList').innerHTML = h;
@@ -500,9 +474,7 @@
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
-                const n = docSnap.data(), id = docSnap.id;
-                h += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
-                    <div style="display:flex; gap:5px; margin-top:10px"><button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`)">تعديل ✏️</button><button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button></div></div>`;
+                h += `<div class="card"><pre>${docSnap.data().t}</pre><button class="btn btn-danger" onclick="delGen('notes','${docSnap.id}')">حذف</button></div>`;
             });
             document.getElementById('nList').innerHTML = h;
         });
@@ -510,18 +482,16 @@
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
-                const s = docSnap.data(), id = docSnap.id;
+                const s = docSnap.data();
                 let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
-                h += `<div class="card"><div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px"><b style="color:var(--admin); cursor:pointer" onclick="editStatName('${id}','${s.title}')">${s.title} ✏️</b><span>${s.date}</span></div>
-                    <table><thead><tr><th>العداد</th><th>العدد</th></tr></thead><tbody>${rows}</tbody></table><button class="btn btn-danger" style="padding:5px; margin-top:10px" onclick="delGen('stats','${id}')">حذف السجل</button></div>`;
+                h += `<div class="card"><b>${s.title}</b><table>${rows}</table></div>`;
             });
             document.getElementById('sList').innerHTML = h;
         });
     }
 
     window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
-    window.editStatName = async (id, old) => { showAlert("تعديل اسم السجل", "", "edit", async (newName) => { if(newName && newName !== old) { await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newName }); } }, old); };
+    window.delGen = (col, id) => deleteDoc(doc(db, "users", curUser.uid, col, id));
 </script>
 </body>
 </html>
