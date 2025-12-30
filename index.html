@@ -524,6 +524,17 @@
         }, currentText);
     };
 
+    window.editStatName = (id, currentTitle) => {
+        showAlert("تعديل عنوان السجل ✏️", "", "edit", async (newTitle) => {
+            if (newTitle && newTitle.trim() !== "" && newTitle !== currentTitle) {
+                await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newTitle });
+            }
+        }, currentTitle);
+    };
+
+    window.logout = () => signOut(auth).then(() => location.reload());
+    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
+
     window.renderSettings = async () => {
         const d = await getDoc(doc(db, "users", curUser.uid));
         if(d.exists()){
@@ -564,18 +575,16 @@
                     <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${x.id}')">×</button>
                     <b style="font-size:0.8rem">${x.n}</b>
                     <div class="c-btns"><button class="c-btn" onclick="updateCount('${x.id}', ${x.c + 1})">+</button><span style="font-weight:900">${x.c}</span><button class="c-btn" onclick="updateCount('${x.id}', ${x.c - 1})">-</button></div>
-                    ${statusHtml}
-                </div>`;
+                    ${statusHtml}</div>`;
             });
-            document.getElementById('cList').innerHTML = h;
+            document.getElementById('cList').innerHTML = h || '<p style="text-align:center; grid-column:1/3; opacity:0.5">لا يوجد عدادات</p>';
         });
 
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             let h = '';
             snap.forEach(docSnap => {
-                const n = docSnap.data(), id = docSnap.id;
-                h += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.8rem; background:rgba(0,0,0,0.1); padding:10px; border-radius:5px">${n.t}</pre>
-                    <div style="display:flex; gap:5px; margin-top:10px"><button class="btn btn-primary" style="padding:5px; flex:1" onclick="editNote('${id}', \`${n.t.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`)">تعديل ✏️</button><button class="btn btn-danger" style="padding:5px; flex:1" onclick="delGen('notes','${id}')">حذف</button></div></div>`;
+                const n = docSnap.data();
+                h += `<div class="card"><p style="white-space:pre-wrap; margin-top:0">${n.t}</p><div style="display:flex; gap:10px"><button class="btn btn-primary" style="padding:5px" onclick="editNote('${docSnap.id}',\`${n.t.replace(/`/g, '\\`')}\`)">تعديل</button><button class="btn btn-danger" style="padding:5px" onclick="delGen('notes','${docSnap.id}')">حذف</button></div></div>`;
             });
             document.getElementById('nList').innerHTML = h;
         });
@@ -591,10 +600,7 @@
             document.getElementById('sList').innerHTML = h;
         });
     }
-
-    window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
-    window.editStatName = async (id, old) => { showAlert("تعديل اسم السجل", "", "edit", async (newName) => { if(newName && newName !== old) { await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: newName }); } }, old); };
 </script>
+
 </body>
 </html>
