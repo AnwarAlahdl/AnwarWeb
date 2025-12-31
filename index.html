@@ -226,7 +226,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, OAuthProvider, signInWithPopup, linkWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, OAuthProvider, signInWithPopup, linkWithPopupgetAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, OAuthProvider, signInWithPopup, linkWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -259,19 +259,6 @@
     };
 
     // --- وظائف Discord Auth المحدثة ---
-    import { 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    onAuthStateChanged, 
-    signOut, 
-    setPersistence, 
-    browserLocalPersistence, 
-    browserSessionPersistence,
-    OAuthProvider,      // تأكد من إضافة هذه
-    signInWithPopup,    // تأكد من إضافة هذه
-    linkWithPopup       // تأكد من إضافة هذه لعملية الربط
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     window.loginWithDiscord = async () => {
         const provider = new OAuthProvider('oidc.discord');
         try {
@@ -581,3 +568,4 @@
 
 </body>
 </html>
+
