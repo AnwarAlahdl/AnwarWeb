@@ -284,10 +284,10 @@
     function applyPermissions() {
         const role = userData.role;
         const canActivate = ['Admin', 'Managment', 'Support'].includes(role);
-        document.getElementById('navActivation').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
+        document.getElementById('navActivation').classList.toggle('hidden', !canActivate);
         document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
         document.getElementById('navAdmin').classList.toggle('hidden', role !== 'Admin');
-        document.getElementById('navAnnounce').classList.toggle('hidden', !['Admin'].includes(role));
+        document.getElementById('navAnnounce').classList.toggle('hidden', !== 'Admin'));
         loadRepCategories();
     }
 
@@ -502,4 +502,5 @@
 </script>
 </body>
 </html>
+
 
