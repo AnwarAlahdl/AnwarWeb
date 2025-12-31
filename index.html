@@ -33,6 +33,12 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-admin { background: var(--admin); color: white; }
 
+        .status-btns { display: flex; gap: 5px; margin-top: 10px; }
+        .status-btn { flex: 1; padding: 5px; border-radius: 5px; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: white; font-size: 0.8rem; }
+        .status-btn.active-success { background: var(--success); }
+        .status-btn.active-danger { background: var(--danger); }
+        .status-btn.active-warn { background: var(--admin); }
+
         .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .counter-item { background: var(--bg); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; }
         .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
@@ -41,10 +47,9 @@
         .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
-        th, td { padding: 10px; border: 1px solid var(--border); text-align: center; }
+        th, td { padding: 10px; border: 1px solid var(--border); text-align: center; color: white; }
         th { background: var(--primary); }
 
-        /* تعميم التصميم الجديد */
         .notice-banner { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 15px; }
 
         .hidden { display: none !important; }
@@ -81,7 +86,6 @@
 </nav>
 
 <div class="container">
-    
     <div id="globalNotice" class="notice-banner">
         <span>📢 تعميم: </span><span id="noticeText"></span>
     </div>
@@ -96,8 +100,7 @@
             </label>
             <button class="btn btn-primary" onclick="handleLogin()">دخول</button>
             <div style="margin-top: 15px; text-align: center; font-size: 0.8rem;">
-                <span onclick="toggleAuth(true)" style="color: var(--primary); cursor: pointer;">إنشاء حساب جديد</span> | 
-                <span onclick="forgotPass()" style="color: var(--admin); cursor: pointer;">نسيت كلمة المرور؟</span>
+                <span onclick="toggleAuth(true)" style="color: var(--primary); cursor: pointer;">إنشاء حساب جديد</span>
             </div>
         </div>
 
@@ -106,47 +109,8 @@
             <input type="text" id="rU" placeholder="اسم المستخدم">
             <input type="email" id="rE" placeholder="الإيميل">
             <input type="password" id="rP" placeholder="كلمة المرور">
-            <input type="password" id="rPC" placeholder="تأكيد كلمة المرور">
             <button class="btn btn-primary" onclick="handleReg()">تسجيل</button>
             <button class="btn" style="background: none; color: var(--text);" onclick="toggleAuth(false)">رجوع</button>
-        </div>
-    </div>
-
-    <div id="counterPage" class="section">
-        <div class="main-layout">
-            <div>
-                <div class="card">
-                    <h3>إضافة عداد جديد</h3>
-                    <input type="text" id="counterName" placeholder="اسم العداد">
-                    <input type="number" id="counterGoal" placeholder="الهدف (مثال: 100)">
-                    <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
-                </div>
-                <div id="countersList" class="counters-grid"></div>
-                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للإحصائيات وتصفير العدادات ➡️</button>
-            </div>
-            
-            <div class="divider"></div>
-
-            <div>
-                <h2 style="text-align: center;">📈 سجل الإحصائيات</h2>
-                <div id="statsList"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="reportsPage" class="section">
-        <div class="card" style="max-width: 700px; margin: auto;">
-            <h2 style="text-align: center;">نظام الريبورتات 📢</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="repId" placeholder="ID اللاعب داخل اللعبة">
-                <input type="text" id="repDiscord" placeholder="Discord ID">
-            </div>
-            <select id="repCat" onchange="loadRepOptions()"></select>
-            <select id="repSub"></select>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="copyReport('in')">📋 نسخ داخل السيرفر</button>
-                <button class="btn btn-success" onclick="copyReport('out')">🌐 نسخ خارج السيرفر</button>
-            </div>
         </div>
     </div>
 
@@ -168,30 +132,66 @@
                         <option value="multiple">خيارات متعددة</option>
                     </select>
                     <div id="multipleOptions" class="hidden">
-                        <input type="text" id="opt1" placeholder="الخيار الأول">
-                        <input type="text" id="opt2" placeholder="الخيار الثاني">
-                        <input type="text" id="opt3" placeholder="الخيار الثالث">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                            <input type="text" id="opt1" placeholder="خيار 1">
+                            <input type="text" id="opt2" placeholder="خيار 2">
+                            <input type="text" id="opt3" placeholder="خيار 3">
+                            <input type="text" id="opt4" placeholder="خيار 4">
+                            <input type="text" id="opt5" placeholder="خيار 5">
+                            <input type="text" id="opt6" placeholder="خيار 6">
+                        </div>
                     </div>
                     <button class="btn btn-success" onclick="addQuestion()">إضافة السؤال</button>
                 </div>
             </div>
             <div class="divider"></div>
             <div>
-                <h3>📋 قائمة الأسئلة المضافة</h3>
+                <h3>📋 مراجعة الأجوبة (تقييمك)</h3>
                 <div id="questionsList"></div>
             </div>
         </div>
     </div>
 
-    <div id="announcementsPage" class="section">
-        <div class="card" style="max-width: 600px; margin: auto;">
-            <h2 style="text-align: center; color: var(--success);">إرسال تعميم جديد 📢</h2>
-            <textarea id="annText" placeholder="اكتب نص التعميم هنا..." rows="4"></textarea>
-            <label>مدة ظهور التعميم (بالساعات):</label>
-            <input type="number" id="annDuration" placeholder="مثال: 24" value="24">
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-success" onclick="sendAnnouncement()">إرسال التعميم</button>
-                <button class="btn btn-danger" onclick="clearAnnouncement()">إلغاء / حذف التعميم الحالي</button>
+    <div id="adminPage" class="section">
+        <div class="card">
+            <h3 style="color: var(--admin);">👥 إدارة المستخدمين</h3>
+            <button class="btn btn-admin" style="width: auto; padding: 5px 20px;" onclick="fetchUsersList()">تحديث القائمة 🔄</button>
+            <div id="adminUserList" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <div id="counterPage" class="section">
+        <div class="main-layout">
+            <div>
+                <div class="card">
+                    <h3>إضافة عداد جديد</h3>
+                    <input type="text" id="counterName" placeholder="اسم العداد">
+                    <input type="number" id="counterGoal" placeholder="الهدف (مثال: 100)">
+                    <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
+                </div>
+                <div id="countersList" class="counters-grid"></div>
+                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للإحصائيات وتصفير العدادات ➡️</button>
+            </div>
+            <div class="divider"></div>
+            <div>
+                <h2 style="text-align: center;">📈 سجل الإحصائيات</h2>
+                <div id="statsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportsPage" class="section">
+        <div class="card" style="max-width: 700px; margin: auto;">
+            <h2 style="text-align: center;">نظام الريبورتات 📢</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="repId" placeholder="ID اللاعب">
+                <input type="text" id="repDiscord" placeholder="Discord ID">
+            </div>
+            <select id="repCat" onchange="loadRepOptions()"></select>
+            <select id="repSub"></select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="copyReport('in')">📋 نسخ داخل السيرفر</button>
+                <button class="btn btn-success" onclick="copyReport('out')">🌐 نسخ خارج السيرفر</button>
             </div>
         </div>
     </div>
@@ -205,24 +205,20 @@
         <div id="notesList" style="max-width: 600px; margin: 20px auto;"></div>
     </div>
 
+    <div id="announcementsPage" class="section">
+        <div class="card" style="max-width: 600px; margin: auto;">
+            <h2 style="text-align: center; color: var(--success);">إرسال تعميم جديد 📢</h2>
+            <textarea id="annText" placeholder="اكتب نص التعميم هنا..." rows="4"></textarea>
+            <input type="number" id="annDuration" placeholder="المدة بالساعات" value="24">
+            <button class="btn btn-success" onclick="sendAnnouncement()">إرسال التعميم</button>
+        </div>
+    </div>
+
     <div id="settingsPage" class="section">
         <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ إعدادات الحساب</h3>
             <div id="userSettingsInfo"></div>
-            <hr style="border-color: var(--border); margin: 20px 0;">
-            <input type="text" id="updateU" placeholder="اسم مستخدم جديد">
-            <input type="password" id="updateP" placeholder="كلمة مرور جديدة">
-            <input type="text" id="update2FA" placeholder="الرمز المخصص (2FA)">
-            <button class="btn btn-primary" onclick="updateProfile()">تحديث البيانات</button>
-            <button class="btn btn-danger" style="margin-top: 20px;" onclick="deleteMyAccount()">حذف الحساب نهائياً</button>
-        </div>
-    </div>
-
-    <div id="adminPage" class="section">
-        <div class="card">
-            <h3 style="color: var(--admin);">👥 إدارة المستخدمين</h3>
-            <button class="btn btn-admin" style="width: auto; padding: 5px 20px;" onclick="fetchUsersList()">تحديث القائمة 🔄</button>
-            <div id="adminUserList" style="margin-top: 20px;"></div>
+            <button class="btn btn-danger" style="margin-top: 20px;" onclick="logout()">تسجيل الخروج</button>
         </div>
     </div>
 
@@ -230,7 +226,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -248,24 +244,13 @@
 
     let curUser = null;
     let userData = null;
-    let reportsConfig = {
-        "reportr": ["يرجى شرح مشكلتك لكي يتم خدمتك", "توجه للدعم الفني مع مايثبت ذلك", "سيتم خدمتك الان", "هل تم خدمتك بالشكل المطلوب؟", "سيتم التاكد من الموضوع , كذللك احتياطًا يرجى منك حفظ تصويرك اخر 20 دقيقه في حال الاحتياج له سيتم استدعائك"],
-        "summon": ["استدعاء يخص المراقبة الدورية توجه للدعم مع تصوير 20 دقيقة", "احفظ تصوير اخر 20 دقيقه من الان وبعد الانتهاء من السيناريو توجه لدعم الفني مباشره", "استدعاء توجه للدعم الفني مع تصوير اخر 20 دقيقه"],
-        "steam": ["الرجاء منك تغيير اسم ستيمك وفايف ام ويكون مطابق لاسم الدسكورد الخاص بك , وعدم تسميته ب اسم عربي او ارقام او زخرفة .. ادارة مستري تاون تتمنى لك يوم ممتع"],
-        "clothes": ["يجب عليك لبس مناسب للمكان و تطبيق الاربي المناسب للمكان", "يجب عليك تغيير لبسك و مواكبة الأربي بإرتداء لبس مناسب لتجنب المحاسبة الادارية", "يجب عليك لبس حذاء لتجنب المحاسبة الادارية", "يجب عليك تغيير لبسك و عدم مخالفة تعميم الملابس لتجنب المحاسبة الادارية", "يرجى منك التوجه لاقرب محل ملابس و تغير الحزام بسبب انه خاص للعساكر فقط", "يجب عليك تعديل ملابسك لتتناسب مع وظيفتك"],
-        "rp": ["يجب عليك تقدير موقفك في اي حالة كنت متواجد فيها وقياسها بالحياة الواقعيه", "يجب عليك تقدير موقفك وتقمص شخصية المصاب وقياسها بالحياة الواقعيه", "يمنع منعا باتا الخروج عن الرول بلاي او التلميح خارج الار بي لتجنب المحاسبة الادارية", "يجب عليك ايقاف مركبتك بالشكل المناسب في المناطق الامنة تجنبا للمحاسبة الادارية"],
-        "gangs": ["يمنع منعاً باتاً القيام بأي أعمال (التقديح والاسلوب السيء) من العدم", "يمنع منعاً باتا التخريم او اطلاق النار خلف الجدران", "يمنع اعطاء كول والتكلم باريحيه وانت مسقط", "عزيزي اللاعب يجب عليك التخطيط قبل بدء السرقة", "عزيزي المواطن , للتذكير يمنع كلبشة شخص بدون رفع اليد", "يجب عليك تقدير قيمة مركبتك والقيادة بشكل سليم", "يمنع الحلف باي طريقة كانت ويجب عليك تقمص الحياة الواقعيه", "يجب ان يكون التهديد بشكل مباشر و يمنع التهديد من داخل المركبة"],
-        "general": ["يجب عليك طلب ومسعف والانتظار", "يمنع منعًا باتًا معالجة شخص في حال تواجد المسعفين", "في حال إزالة اربع من اطارات السيارة يمنع استكمال القيادة بها", "يمنع حمل اللاعب اثناء ركوب الدباب ايضًا المركبة", "يمنع إرتداء او إستعمال اي خوذة اثناء مشاركتك في اي إطلاق ناري", "يمنع الكذب بالمصطلحات الاتية ( سحر او باخذ حبة او صداع والخ )", "يمنع منعًا باتًا القيام بأي أعمال ( التقديح والاسلوب السيء )", "يمنع عليك تكرار البلاغات والسبام بالبلاغات العسكرية او الصحة"]
-    };
 
-    // --- نظام المودال المخصص ---
+    // --- نظام المودال ---
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, customHtml = null) => {
-        const modal = document.getElementById('sysModal');
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerHTML = customHtml ? customHtml : `<p>${msg}</p>`;
         const btns = document.getElementById('modalBtns');
         btns.innerHTML = '';
-        
         if (type === 'ok') {
             btns.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">موافق</button>`;
         } else if (type === 'confirm') {
@@ -275,7 +260,7 @@
             n.onclick = closeModal;
             btns.append(y, n);
         }
-        modal.style.display = 'flex';
+        document.getElementById('sysModal').style.display = 'flex';
     };
     window.closeModal = () => document.getElementById('sysModal').style.display = 'none';
 
@@ -297,116 +282,33 @@
 
     function applyPermissions() {
         const role = userData.role;
-        const navReports = document.getElementById('navReports');
-        const navAdmin = document.getElementById('navAdmin');
-        const navAnnounce = document.getElementById('navAnnounce');
-        
-        navReports.classList.add('hidden');
-        navAdmin.classList.add('hidden');
-        navAnnounce.classList.add('hidden');
-
-        if (role === 'Admin') {
-            navReports.classList.remove('hidden');
-            navAdmin.classList.remove('hidden');
-            navAnnounce.classList.remove('hidden');
-        } else if (role === 'Managment') {
-            navReports.classList.remove('hidden');
-            navAnnounce.classList.remove('hidden');
-        } else if (role === 'Support') {
-            navReports.classList.remove('hidden');
-        }
+        document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
+        document.getElementById('navAdmin').classList.toggle('hidden', role !== 'Admin');
+        document.getElementById('navAnnounce').classList.toggle('hidden', !['Admin', 'Managment'].includes(role));
         loadRepCategories();
     }
 
-    // --- العدادات ---
-    window.addCounter = async () => {
-        const n = document.getElementById('counterName').value;
-        const g = parseInt(document.getElementById('counterGoal').value);
-        if (!n || !g) return showAlert("خطأ", "أكمل البيانات");
-        await addDoc(collection(db, "users", curUser.uid, "counters"), { 
-            n, g, c: 0, createdAt: Date.now() 
-        });
-        document.getElementById('counterName').value = '';
-        document.getElementById('counterGoal').value = '';
-    };
-
-    window.updateCount = async (id, val, goal) => {
-        const newCount = Math.max(0, val);
-        await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: newCount });
-        if (newCount >= goal && val > newCount - 1) {
-            showAlert("كفو 🔥", "أشهد انك كفو 🫡");
+    // --- تحديث قائمة المستخدمين (للأدمن) ---
+    window.fetchUsersList = async () => {
+        const listDiv = document.getElementById('adminUserList');
+        listDiv.innerHTML = 'جاري التحميل...';
+        try {
+            const q = await getDocs(collection(db, "users"));
+            let h = '<table><thead><tr><th>الاسم</th><th>الرتبة</th><th>الإيميل</th></tr></thead><tbody>';
+            q.forEach(docSnap => {
+                const u = docSnap.data();
+                h += `<tr><td>${u.u}</td><td>${u.role}</td><td>${u.e}</td></tr>`;
+            });
+            h += '</tbody></table>';
+            listDiv.innerHTML = h;
+        } catch (e) {
+            listDiv.innerHTML = 'حدث خطأ في جلب البيانات';
         }
     };
 
-    window.transferToStats = async () => {
-        showAlert("نقل البيانات", "هل تريد تصفير العدادات ونقلها للسجل؟", "confirm", async () => {
-            const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
-            let data = [];
-            const batch = writeBatch(db);
-            q.forEach(d => {
-                const c = d.data();
-                data.push({ n: c.n, c: c.c });
-                batch.update(d.ref, { c: 0 });
-            });
-            if (data.length > 0) {
-                await addDoc(collection(db, "users", curUser.uid, "stats"), {
-                    title: "سجل جديد",
-                    date: new Date().toLocaleString('ar-EG'),
-                    data: data,
-                    createdAt: Date.now()
-                });
-                await batch.commit();
-            }
-        });
-    };
-
-    // --- الريبورتات ---
-    function loadRepCategories() {
-        const sel = document.getElementById('repCat');
-        if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر التصنيف --</option>';
-        const roles = {
-            "reportr": "Reportr", "summon": "استدعاء", "steam": "Steam", "clothes": "ملابس", "rp": "RP", "gangs": "عصابات/عساكر", "general": "عامة"
-        };
-        Object.keys(reportsConfig).forEach(k => {
-            if (userData.role === 'Support' && k !== 'summon') return;
-            sel.innerHTML += `<option value="${k}">${roles[k]}</option>`;
-        });
-    }
-
-    window.loadRepOptions = () => {
-        const cat = document.getElementById('repCat').value;
-        const sub = document.getElementById('repSub');
-        sub.innerHTML = '';
-        if (cat) {
-            reportsConfig[cat].forEach(txt => {
-                sub.innerHTML += `<option value="${txt}">${txt.substring(0, 50)}...</option>`;
-            });
-        }
-    };
-
-    window.copyReport = async (mode) => {
-        const id = document.getElementById('repId').value;
-        const discord = document.getElementById('repDiscord').value;
-        const msg = document.getElementById('repSub').value;
-        if (!msg) return showAlert("خطأ", "اختر الريبورت");
-        
-        let final = mode === 'in' ? `/reportr ${id} ${msg}` : `${msg}\n<@${discord}>`;
-        await navigator.clipboard.writeText(final);
-        showAlert("تم النسخ", "تم نسخ النص بنجاح ✅");
-    };
-
-    // --- دوال صفحة التفعيل الجديدة ---
-    window.calculateAge = () => {
-        const birth = document.getElementById('birthDate').value;
-        if(!birth) return;
-        const age = Math.floor((new Date() - new Date(birth)) / (365.25 * 24 * 60 * 60 * 1000));
-        document.getElementById('ageResult').innerText = `العمر التقريبي: ${age} سنة`;
-    };
-
+    // --- التفعيل و الأسئلة ---
     window.toggleQOptions = () => {
-        const type = document.getElementById('qType').value;
-        document.getElementById('multipleOptions').classList.toggle('hidden', type !== 'multiple');
+        document.getElementById('multipleOptions').classList.toggle('hidden', document.getElementById('qType').value !== 'multiple');
     };
 
     window.addQuestion = async () => {
@@ -416,128 +318,112 @@
         
         let opts = [];
         if(type === 'multiple') {
-            opts = [document.getElementById('opt1').value, document.getElementById('opt2').value, document.getElementById('opt3').value];
+            for(let i=1; i<=6; i++) {
+                const val = document.getElementById(`opt${i}`).value;
+                if(val) opts.push(val);
+            }
         }
         
         await addDoc(collection(db, "users", curUser.uid, "activation_questions"), {
             text, type, opts, createdAt: Date.now()
         });
         document.getElementById('qText').value = '';
+        ['opt1','opt2','opt3','opt4','opt5','opt6'].forEach(id => document.getElementById(id).value = '');
     };
 
-    // --- نظام التعاميم ---
-    window.sendAnnouncement = async () => {
-        const text = document.getElementById('annText').value;
-        const hours = parseInt(document.getElementById('annDuration').value);
-        if(!text) return showAlert("خطأ", "اكتب نص التعميم");
-        
-        const expiresAt = Date.now() + (hours * 60 * 60 * 1000);
-        await setDoc(doc(db, "system_notices", "current"), {
-            text, expiresAt, createdAt: Date.now(), sender: userData.u
-        });
-        showAlert("تم", "تم إرسال التعميم بنجاح ✅");
-        document.getElementById('annText').value = '';
+    // زر التقييم في صفحة التفعيل (صح/خطأ)
+    window.setQStatus = (btn, status) => {
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active-success', 'active-danger', 'active-warn'));
+        if(status === 'correct') btn.classList.add('active-success');
+        if(status === 'wrong') btn.classList.add('active-danger');
+        if(status === 'warn') btn.classList.add('active-warn');
     };
 
-    window.clearAnnouncement = async () => {
-        await deleteDoc(doc(db, "system_notices", "current"));
-        showAlert("تم", "تم حذف التعميم");
+    // --- العدادات ---
+    window.addCounter = async () => {
+        const n = document.getElementById('counterName').value;
+        const g = parseInt(document.getElementById('counterGoal').value);
+        if (!n || !g) return;
+        await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g, c: 0, createdAt: Date.now() });
+        document.getElementById('counterName').value = ''; document.getElementById('counterGoal').value = '';
     };
 
-    function listenToAnnouncements() {
-        onSnapshot(doc(db, "system_notices", "current"), (snap) => {
-            const banner = document.getElementById('globalNotice');
-            if(snap.exists()) {
-                const data = snap.data();
-                if(Date.now() < data.expiresAt) {
-                    document.getElementById('noticeText').innerText = data.text;
-                    banner.style.display = 'block';
-                } else {
-                    banner.style.display = 'none';
-                }
-            } else {
-                banner.style.display = 'none';
+    window.updateCount = async (id, val, goal) => {
+        const newCount = Math.max(0, val);
+        await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: newCount });
+        if (newCount >= goal && val > newCount - 1) showAlert("كفو 🔥", "أشهد انك كفو 🫡");
+    };
+
+    window.transferToStats = async () => {
+        showAlert("نقل البيانات", "تصفير العدادات ونقلها للسجل؟", "confirm", async () => {
+            const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
+            let data = [];
+            const batch = writeBatch(db);
+            q.forEach(d => {
+                data.push({ n: d.data().n, c: d.data().c });
+                batch.update(d.ref, { c: 0 });
+            });
+            if (data.length > 0) {
+                await addDoc(collection(db, "users", curUser.uid, "stats"), {
+                    title: "سجل جديد", date: new Date().toLocaleString('ar-EG'),
+                    data: data, createdAt: Date.now()
+                });
+                await batch.commit();
             }
         });
-    }
-
-    // --- الملاحظات ---
-    window.addNote = async () => {
-        const t = document.getElementById('noteInput').value;
-        if (!t) return;
-        await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
-        document.getElementById('noteInput').value = '';
     };
 
-    window.editNote = (id, oldText) => {
-        const html = `<textarea id="editNoteArea" rows="5" style="width:100%">${oldText}</textarea>`;
-        showAlert("تعديل ملاحظة", "", "confirm", async () => {
-            const nt = document.getElementById('editNoteArea').value;
-            await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: nt });
-        }, html);
-    };
-
-    // --- المستمعات ---
+    // --- المستمعات العامة ---
     function initListeners() {
-        // مستمع العدادات
+        // العدادات
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "asc")), (snap) => {
-            const list = document.getElementById('countersList');
-            list.innerHTML = '';
-            let items = [];
-            snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-            items.sort((a, b) => (a.c >= a.g) - (b.c >= b.g));
-            items.forEach(x => {
-                const isDone = x.c >= x.g;
-                list.innerHTML += `
-                    <div class="counter-item ${isDone ? 'completed' : ''}">
-                        <div style="font-weight: 900;">${x.n}</div>
-                        <div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn btn-primary" onclick="updateCount('${x.id}', ${x.c+1}, ${x.g})">+</button>
-                            <button class="btn btn-danger" onclick="updateCount('${x.id}', ${x.c-1}, ${x.g})">-</button>
-                        </div>
-                        <button class="btn" style="background: none; color: var(--danger); font-size: 0.7rem;" onclick="delGen('counters', '${x.id}')">حذف</button>
-                    </div>`;
-            });
-        });
-
-        // مستمع الملاحظات
-        onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
-            const list = document.getElementById('notesList');
-            list.innerHTML = '';
+            const list = document.getElementById('countersList'); list.innerHTML = '';
             snap.forEach(d => {
-                const n = d.data();
-                list.innerHTML += `
-                    <div class="card">
-                        <pre style="white-space: pre-wrap; font-family: Cairo; font-size: 0.9rem;">${n.t}</pre>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn btn-primary" style="padding: 5px;" onclick="editNote('${d.id}', \`${n.t}\`)">تعديل</button>
-                            <button class="btn btn-danger" style="padding: 5px;" onclick="delGen('notes', '${d.id}')">حذف</button>
-                        </div>
-                    </div>`;
+                const x = d.data(); const isDone = x.c >= x.g;
+                list.innerHTML += `<div class="counter-item ${isDone ? 'completed' : ''}">
+                    <b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1}, ${x.g})">+</button>
+                        <button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1}, ${x.g})">-</button>
+                    </div>
+                    <button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button>
+                </div>`;
             });
         });
 
-        // مستمع أسئلة التفعيل
+        // الأسئلة والتقييم
         onSnapshot(query(collection(db, "users", curUser.uid, "activation_questions"), orderBy("createdAt", "desc")), (snap) => {
-            const list = document.getElementById('questionsList');
-            list.innerHTML = '';
+            const list = document.getElementById('questionsList'); list.innerHTML = '';
             snap.forEach(d => {
                 const q = d.data();
-                let optsHtml = q.type === 'multiple' ? `<div style="font-size:0.8rem; color:gray">الخيارات: ${q.opts.filter(o=>o).join(' - ')}</div>` : '';
+                let optsHtml = q.type === 'multiple' ? `<div style="font-size:0.8rem; color:gray">الخيارات: ${q.opts.join(' - ')}</div>` : '';
                 list.innerHTML += `
                     <div class="card">
                         <b>${q.text}</b> (${q.type === 'boolean' ? 'صح/خطأ' : 'اختيارات'})
                         ${optsHtml}
-                        <button class="btn btn-danger" style="margin-top:10px; padding:2px" onclick="delGen('activation_questions', '${d.id}')">حذف</button>
+                        <div class="status-btns">
+                            <button class="status-btn" onclick="setQStatus(this, 'correct')">✅ صح</button>
+                            <button class="status-btn" onclick="setQStatus(this, 'wrong')">❌ خطأ</button>
+                            <button class="status-btn" onclick="setQStatus(this, 'warn')">⚠️ تنبيه</button>
+                        </div>
+                        <button class="btn btn-danger" style="margin-top:10px; padding:2px" onclick="delGen('activation_questions', '${d.id}')">حذف السؤال</button>
                     </div>`;
             });
         });
 
-        // مستمع الإحصائيات
+        // الملاحظات
+        onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
+            const list = document.getElementById('notesList'); list.innerHTML = '';
+            snap.forEach(d => {
+                list.innerHTML += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo;">${d.data().t}</pre>
+                <button class="btn btn-danger" style="padding:5px" onclick="delGen('notes', '${d.id}')">حذف</button></div>`;
+            });
+        });
+
+        // الإحصائيات
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
-            const list = document.getElementById('statsList');
-            list.innerHTML = '';
+            const list = document.getElementById('statsList'); list.innerHTML = '';
             snap.forEach(d => {
                 const s = d.data();
                 let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
@@ -546,7 +432,7 @@
         });
     }
 
-    // --- دوال عامة ---
+    // --- وظائف عامة ---
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + 'Page').classList.add('active');
@@ -554,16 +440,19 @@
     };
     window.toggleSidebar = (force) => {
         const s = document.getElementById('sidebar');
-        const o = document.getElementById('overlay');
         const isOpen = force !== undefined ? force : !s.classList.contains('open');
         s.classList.toggle('open', isOpen);
-        o.style.display = isOpen ? 'block' : 'none';
+        document.getElementById('overlay').style.display = isOpen ? 'block' : 'none';
     };
     window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => {
-        await deleteDoc(doc(db, "users", curUser.uid, col, id));
-    });
-
+    window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
+    window.calculateAge = () => {
+        const birth = document.getElementById('birthDate').value;
+        if(!birth) return;
+        const age = Math.floor((new Date() - new Date(birth)) / (365.25 * 24 * 60 * 60 * 1000));
+        document.getElementById('ageResult').innerText = `العمر التقريبي: ${age} سنة`;
+    };
+    
     window.toggleAuth = (reg) => {
         document.getElementById('loginBox').classList.toggle('hidden', reg);
         document.getElementById('regBox').classList.toggle('hidden', !reg);
@@ -589,6 +478,35 @@
             const res = await createUserWithEmailAndPassword(auth, e, p);
             await setDoc(doc(db, "users", res.user.uid), { u, e, role: 'User', createdAt: Date.now() });
         } catch(err) { showAlert("خطأ", err.message); }
+    };
+
+    function listenToAnnouncements() {
+        onSnapshot(doc(db, "system_notices", "current"), (snap) => {
+            const banner = document.getElementById('globalNotice');
+            if(snap.exists() && Date.now() < snap.data().expiresAt) {
+                document.getElementById('noticeText').innerText = snap.data().text;
+                banner.style.display = 'block';
+            } else banner.style.display = 'none';
+        });
+    }
+
+    // الريبورتات - مثال بسيط للتوافق
+    window.loadRepCategories = () => {
+        const sel = document.getElementById('repCat'); if(!sel) return;
+        sel.innerHTML = '<option value="">-- اختر التصنيف --</option><option value="general">عامة</option>';
+    };
+    window.loadRepOptions = () => {
+        const sub = document.getElementById('repSub');
+        sub.innerHTML = '<option value="سيتم خدمتك">سيتم خدمتك</option>';
+    };
+    window.copyReport = async (mode) => {
+        const msg = document.getElementById('repSub').value;
+        await navigator.clipboard.writeText(msg); showAlert("تم", "نسخ بنجاح");
+    };
+    window.addNote = async () => {
+        const t = document.getElementById('noteInput').value;
+        if (t) await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
+        document.getElementById('noteInput').value = '';
     };
 
 </script>
