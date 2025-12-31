@@ -52,6 +52,11 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 25px; width: 100%; max-width: 450px; text-align: center; border: 1px solid var(--border); overflow-y: auto; max-height: 90vh; }
         
+        .admin-user-card { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; margin-bottom: 10px; text-align: right; border: 1px solid var(--border); }
+        .badge { padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; }
+        .badge-admin { background: var(--admin); color: white; }
+        .badge-user { background: var(--border); color: white; }
+
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
     </style>
@@ -104,15 +109,76 @@
             <h2 style="text-align: center;">تسجيل الدخول</h2>
             <input type="text" id="lUser" placeholder="الإيميل أو اليوزر نيم">
             <input type="password" id="lPass" placeholder="كلمة المرور">
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; margin: 5px 0 15px; cursor:pointer">
+                <input type="checkbox" id="remMe" style="width:auto"> تذكرني
+            </label>
             <button class="btn btn-primary" onclick="tryLogin()">دخول</button>
+            <button class="btn" style="background:none; color:var(--primary)" onclick="toggleAuth(true)">إنشاء حساب</button>
+        </div>
+        <div class="card hidden" id="regBox" style="max-width: 450px; margin: auto;">
+            <h2 style="text-align: center;">حساب جديد</h2>
+            <input type="text" id="rU" placeholder="اليوزر نيم">
+            <input type="email" id="rE" placeholder="الإيميل">
+            <input type="password" id="rP" placeholder="كلمة المرور">
+            <input type="password" id="rPC" placeholder="تأكيد كلمة المرور">
+            <button class="btn btn-primary" onclick="handleReg()">تسجيل</button>
+            <button class="btn" style="background:none; color:var(--text)" onclick="toggleAuth(false)">رجوع</button>
         </div>
     </div>
 
     <div id="adminPanelPage" class="section">
-        <div class="card">
-            <h3 style="color:var(--admin)">👥 إدارة المستخدمين</h3>
-            <button class="btn btn-primary" style="margin-bottom:15px; width:auto; padding:8px 20px" onclick="loadAdminPanel()">تحديث القائمة 🔄</button>
-            <div id="adminUserList">اضغط على التحديث لجلب البيانات...</div>
+        <div class="main-layout">
+            <div class="column-right">
+                <div class="card">
+                    <h3 style="color:var(--admin)">👥 إدارة المستخدمين</h3>
+                    <div id="adminUserList">جارِ التحميل...</div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="column-left">
+                <div class="card">
+                    <h3 style="color:var(--primary)">📋 إدارة خيارات الريبورتات</h3>
+                    <select id="adminRepCat" onchange="loadAdminRepOptions()">
+                        <option value="reportr">Reportr</option>
+                        <option value="summon">ريبورتات الاستدعاء</option>
+                        <option value="steam">ريبورتات Steam</option>
+                        <option value="clothes">ريبورتات الملابس</option>
+                        <option value="rp">ريبورتات RP</option>
+                        <option value="gangs">ريبورتات الإجرام</option>
+                        <option value="general">ريبورتات عامة</option>
+                    </select>
+                    <div id="adminRepOptionsList" style="margin-top:10px"></div>
+                    <hr style="border:0.5px solid var(--border); margin:15px 0">
+                    <input type="text" id="newRepOptText" placeholder="نص الريبورت الجديد">
+                    <button class="btn btn-success" onclick="addRepOption()">+ إضافة خيار</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportsPage" class="section">
+        <div class="card" style="max-width: 700px; margin: auto;">
+            <h2 style="text-align: center; margin-bottom: 20px;">نظام الريبورتات 📢</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="font-size: 0.8rem;">ID اللاعب:</label>
+                    <input type="text" id="repId" placeholder="مثال: 120">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem;">Discord ID:</label>
+                    <input type="text" id="repDiscord" placeholder="مثال: 456789123">
+                </div>
+            </div>
+            <label style="display:block; margin-top:10px;">اختر التصنيف:</label>
+            <select id="repCat" onchange="updateRepSubOptions()"></select>
+            <label style="display:block; margin-top:10px;">الرسالة (السبب التفصيلي):</label>
+            <select id="repSub">
+                <option value="">-- اختر التصنيف أولاً --</option>
+            </select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px;">
+                <button class="btn btn-primary" onclick="copyReport('in')">📋 نسخ داخل السيرفر</button>
+                <button class="btn btn-success" onclick="copyReport('out')">🌐 نسخ خارج السيرفر</button>
+            </div>
         </div>
     </div>
 
@@ -120,28 +186,18 @@
         <div class="main-layout">
             <div class="column-right">
                 <div class="card" style="text-align: center;">
-                    <h3>إضافة عداد جديد</h3>
+                    <h3 style="margin-top:0">إضافة عداد جديد</h3>
                     <input type="text" id="cn" placeholder="اسم العداد">
                     <input type="number" id="cg" placeholder="الهدف الرقمي">
                     <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
                 </div>
                 <div class="counters-grid" id="cList"></div>
+                <button class="btn btn-success" style="margin-top:20px" onclick="transferStats()">نقل للإحصائيات وتصفير ➡️</button>
             </div>
             <div class="divider"></div>
-            <div id="sList" class="column-left"></div>
-        </div>
-    </div>
-
-    <div id="reportsPage" class="section">
-        <div class="card" style="max-width: 700px; margin: auto;">
-            <h2 style="text-align: center;">نظام الريبورتات 📢</h2>
-            <input type="text" id="repId" placeholder="ID اللاعب">
-            <input type="text" id="repDiscord" placeholder="Discord ID">
-            <select id="repCat" onchange="updateRepSubOptions()"></select>
-            <select id="repSub"></select>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px;">
-                <button class="btn btn-primary" onclick="copyReport('in')">📋 نسخ داخلي</button>
-                <button class="btn btn-success" onclick="copyReport('out')">🌐 نسخ خارجي</button>
+            <div class="column-left">
+                <h2 style="text-align: center; margin-top:0">📈 سجل الإحصائيات</h2>
+                <div id="sList"></div>
             </div>
         </div>
     </div>
@@ -149,17 +205,23 @@
     <div id="settingsPage" class="section">
         <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ الإعدادات الحالية</h3>
-            <div class="setting-row">اليوزر: <b id="dispU">-</b></div>
-            <div class="setting-row">الإيميل: <b id="dispE">-</b></div>
-            <button class="btn btn-danger" style="margin-top:20px" onclick="logout()">خروج</button>
+            <div id="accDetails">
+                <div class="setting-row"><span>اليوزر:</span> <b id="dispU">-</b></div>
+                <div class="setting-row"><span>الإيميل:</span> <b id="dispE">-</b></div>
+            </div>
+            <hr style="border:0.1px solid var(--border); margin:20px 0">
+            <h3>تعديل البيانات</h3>
+            <input type="text" id="eU" placeholder="يوزر جديد">
+            <button class="btn btn-primary" onclick="updateProfile()">تحديث اليوزر</button>
+            <button class="btn btn-danger" style="margin-top:10px" onclick="logout()">خروج</button>
         </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, orderBy, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -176,17 +238,44 @@
 
     let curUser = null;
     let userData = null;
+    let localCounters = [];
     let globalRepData = {};
 
-    // نظام المودال الموحد والمطور
+    // إدارة التنقل
+    window.nav = (id) => {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id + 'Page');
+        if(target) target.classList.add('active');
+        if(document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
+        if(id === 'settings') renderSettings();
+        if(id === 'adminPanel') loadAdminPanel();
+        if(id === 'reports') renderReportsSelect();
+    };
+
+    function applyPermissions(role) {
+        const navReports = document.getElementById('nav_reports');
+        const navBroadcast = document.getElementById('nav_admin_broadcast');
+        const navAdminPanel = document.getElementById('nav_admin_panel');
+        const badge = document.getElementById('roleBadge');
+        badge.innerText = role; badge.style.display = 'block';
+        navReports.classList.add('hidden'); navBroadcast.classList.add('hidden'); navAdminPanel.classList.add('hidden');
+        if (role === 'Admin') { navReports.classList.remove('hidden'); navBroadcast.classList.remove('hidden'); navAdminPanel.classList.remove('hidden'); }
+        else if (role === 'Managment' || role === 'Support') { navReports.classList.remove('hidden'); }
+    }
+
+    // نظام المودال والتنبيهات
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, defaultValue = '') => {
         const modal = document.getElementById('sysModal');
-        const msgArea = document.getElementById('sysMsg');
         const btns = document.getElementById('sysBtns');
+        const msgArea = document.getElementById('sysMsg');
         document.getElementById('sysTitle').innerText = title;
         
         if (type === 'edit') {
-            msgArea.innerHTML = `<textarea id="modalInput" rows="8" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:12px; font-family:Cairo; background:#f1f5f9;">${defaultValue}</textarea>`;
+            msgArea.innerHTML = `<textarea id="modalInput" rows="8" style="width:100%; border:1px solid var(--border); padding:10px; border-radius:10px; font-family:Cairo;">${defaultValue}</textarea>`;
+        } else if (type === 'edit_user') {
+            msgArea.innerHTML = `<input type="text" id="m_u" placeholder="الاسم الجديد"><select id="m_r"><option value="">-- تغيير الرتبة --</option><option value="User">User</option><option value="Support">Support</option><option value="Managment">Managment</option><option value="Admin">Admin</option></select><input type="password" id="m_p" placeholder="كلمة مرور جديدة">`;
+        } else if (type === 'broadcast') {
+            msgArea.innerHTML = `<textarea id="bcMsg" placeholder="اكتب التعميم هنا..." rows="4"></textarea><select id="bcTime"><option value="0">يدوي</option><option value="1">1 ساعة</option><option value="24">يوم</option></select>`;
         } else {
             msgArea.innerHTML = `<p>${msg}</p>`;
         }
@@ -197,8 +286,11 @@
         } else {
             const yes = document.createElement('button'); yes.className = 'btn btn-primary'; yes.innerText = 'تأكيد';
             yes.onclick = async () => { 
-                let val = (type === 'edit') ? document.getElementById('modalInput').value : true;
-                if(onConfirm) await onConfirm(val); 
+                let val = null;
+                if(type === 'edit') val = document.getElementById('modalInput').value;
+                if(type === 'edit_user') val = { name: document.getElementById('m_u').value, role: document.getElementById('m_r').value, pass: document.getElementById('m_p').value };
+                if(type === 'broadcast') val = { text: document.getElementById('bcMsg').value, hours: document.getElementById('bcTime').value };
+                if(onConfirm) await onConfirm(val || true); 
                 closeAlert(); 
             };
             const no = document.createElement('button'); no.className = 'btn'; no.style.background = '#475569'; no.style.color = 'white';
@@ -210,21 +302,21 @@
 
     window.closeAlert = () => document.getElementById('sysModal').style.display = 'none';
 
+    // المصادقة
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             curUser = user;
             const uDoc = await getDoc(doc(db, "users", user.uid));
-            if(uDoc.exists()) { 
-                userData = uDoc.data();
-                if(userData.role === 'Admin') document.getElementById('nav_admin_panel').classList.remove('hidden');
-                document.getElementById('roleBadge').innerText = userData.role;
-                document.getElementById('roleBadge').style.display = 'block';
-            }
-            nav('notes'); initListeners(); listenToAnnouncements(); syncRepData();
-        } else { nav('auth'); }
+            if(uDoc.exists()) { userData = uDoc.data(); applyPermissions(userData.role); }
+            document.getElementById('hamBtn').style.display = 'block';
+            await syncRepData(); nav('counter'); initListeners(); listenToAnnouncements();
+        } else {
+            nav('auth'); document.getElementById('hamBtn').style.display = 'none';
+            document.getElementById('globalNotice').style.display = 'none'; document.getElementById('roleBadge').style.display = 'none';
+        }
     });
 
-    // الملاحظات
+    // وظائف الملاحظات المحدثة
     window.addNote = async () => {
         const t = document.getElementById('ntIn').value; if(!t) return;
         await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
@@ -233,25 +325,29 @@
 
     window.editNote = (id, currentText) => {
         showAlert("تعديل ملاحظة", "", "edit", async (newText) => {
-            if(newText && newText.trim() !== "") await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
+            if(newText && newText.trim() !== "") {
+                await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
+            }
         }, currentText);
     };
 
     window.copyNote = async (text) => {
-        await navigator.clipboard.writeText(text);
-        showAlert("تم النسخ ✅", "تم الحفظ في الحافظة");
+        try {
+            await navigator.clipboard.writeText(text);
+            showAlert("تم النسخ ✅", "تم حفظ الملاحظة في الحافظة");
+        } catch (err) { showAlert("خطأ", "فشل النسخ"); }
     };
 
     function initListeners() {
-        // تحديث عرض الملاحظات بالأزرار الجديدة
+        // الاستماع للملاحظات (مع أزرار التعديل والنسخ)
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             let h = ''; snap.forEach(d => {
-                const n = d.data();
+                const note = d.data();
                 h += `<div class="card">
-                    <pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.85rem; margin-bottom:15px; color:var(--text)">${n.t}</pre>
+                    <pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.85rem; margin-bottom:15px; color:var(--text)">${note.t}</pre>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px">
-                        <button class="btn btn-primary" style="padding:8px; font-size:0.75rem" onclick="editNote('${d.id}', \`${n.t}\`)">تعديل ✏️</button>
-                        <button class="btn btn-success" style="padding:8px; font-size:0.75rem" onclick="copyNote(\`${n.t}\`)">نسخ 📋</button>
+                        <button class="btn btn-primary" style="padding:8px; font-size:0.75rem" onclick="editNote('${d.id}', \`${note.t}\`)">تعديل ✏️</button>
+                        <button class="btn btn-success" style="padding:8px; font-size:0.75rem" onclick="copyNote(\`${note.t}\`)">نسخ 📋</button>
                         <button class="btn btn-danger" style="padding:8px; font-size:0.75rem" onclick="delGen('notes','${d.id}')">حذف ✖</button>
                     </div>
                 </div>`;
@@ -259,63 +355,84 @@
             document.getElementById('nList').innerHTML = h;
         });
 
-        // المستمعات الأخرى...
-        onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "asc")), (snap) => {
-            let h = ''; snap.forEach(d => {
-                const x = d.data();
-                h += `<div class="counter-item ${x.c >= x.g ? 'completed' : ''}">
+        // بقية المستمعات (العدادات والإحصائيات)
+        onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("ord", "asc")), (snap) => {
+            localCounters = []; snap.forEach(d => localCounters.push({ id: d.id, ...d.data() }));
+            let h = '';
+            localCounters.forEach(x => {
+                const isDone = x.c >= x.g;
+                h += `<div class="counter-item ${isDone ? 'completed' : ''}">
+                    <button style="position:absolute; top:5px; left:5px; background:none; border:none; color:var(--danger); cursor:pointer" onclick="delGen('counters','${x.id}')">×</button>
                     <b>${x.n}</b>
-                    <div class="c-btns"><button class="c-btn" onclick="updateCount('${d.id}', ${x.c + 1})">+</button><span>${x.c}</span><button class="c-btn" onclick="updateCount('${d.id}', ${x.c - 1})">-</button></div>
+                    <div class="c-btns"><button class="c-btn" onclick="updateCount('${x.id}', ${x.c + 1})">+</button><span>${x.c}</span><button class="c-btn" onclick="updateCount('${x.id}', ${x.c - 1})">-</button></div>
                 </div>`;
             });
             document.getElementById('cList').innerHTML = h;
         });
+
+        onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
+            let h = ''; snap.forEach(d => {
+                const s = d.data();
+                let r = s.data.map(i => `<tr><td>${i.n}</td><td>${i.c}</td></tr>`).join('');
+                h += `<div class="card"><b>${s.title}</b><table style="margin-bottom:10px">${r}</table><button class="btn btn-danger" style="padding:5px" onclick="delGen('stats','${d.id}')">حذف</button></div>`;
+            });
+            document.getElementById('sList').innerHTML = h;
+        });
     }
 
-    // إدارة المستخدمين (حل مشكلة البطء)
-    window.loadAdminPanel = async () => {
-        const list = document.getElementById('adminUserList');
-        list.innerText = "جارِ جلب البيانات...";
-        try {
-            const snap = await getDocs(collection(db, "users"));
-            list.innerHTML = '';
-            snap.forEach(d => {
-                const u = d.data();
-                list.innerHTML += `<div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; text-align:right">
-                    <b>${u.u}</b> [${u.role}] <br> <small>${u.e}</small>
-                </div>`;
-            });
-        } catch(e) { list.innerText = "خطأ في التحميل."; }
+    // بقية الوظائف الأساسية
+    window.syncRepData = async () => {
+        const docRef = doc(db, "settings", "reports_config");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) globalRepData = docSnap.data();
     };
 
-    window.nav = (id) => {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id + 'Page').classList.add('active');
-        if(id === 'adminPanel') loadAdminPanel();
-        toggleSidebar(false);
+    window.renderReportsSelect = () => {
+        const select = document.getElementById('repCat');
+        select.innerHTML = '<option value="">-- اختر التصنيف --</option>';
+        Object.keys(globalRepData).forEach(cat => {
+            if(userData.role === 'Support' && cat !== 'summon') return;
+            const names = { reportr: "Reportr", summon: "استدعاء", steam: "ستيم", clothes: "ملابس", rp: "RP", gangs: "إجرام", general: "عامة" };
+            const o = document.createElement('option'); o.value = cat; o.innerText = names[cat] || cat;
+            select.appendChild(o);
+        });
     };
 
-    window.toggleSidebar = (f) => {
-        const s = document.getElementById('sidebar'), o = document.getElementById('overlay');
-        const open = f !== undefined ? f : !s.classList.contains('open');
-        s.classList.toggle('open', open); o.style.display = open ? 'block' : 'none';
+    window.updateRepSubOptions = () => {
+        const cat = document.getElementById('repCat').value;
+        const sub = document.getElementById('repSub');
+        sub.innerHTML = '<option value="">-- اختر الرد --</option>';
+        if(cat && globalRepData[cat]) globalRepData[cat].forEach(t => {
+            const o = document.createElement('option'); o.value = t; o.innerText = t.substring(0, 60); sub.appendChild(o);
+        });
     };
 
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
-    window.logout = () => signOut(auth).then(() => location.reload());
-    
-    // دوال مساعدة لضمان استمرارية عمل الكود الخاص بك
-    window.syncRepData = async () => { const d = await getDoc(doc(db, "settings", "reports_config")); if(d.exists()) globalRepData = d.data(); };
+    window.copyReport = async (mode) => {
+        const id = document.getElementById('repId').value, disc = document.getElementById('repDiscord').value, reason = document.getElementById('repSub').value;
+        if(!reason) return showAlert("خطأ", "اختر السبب");
+        let text = mode === 'in' ? `/reportr ${id} ${reason}` : `${reason}\n<@${disc}>`;
+        await navigator.clipboard.writeText(text); showAlert("تم النسخ ✅", "بنجاح");
+    };
+
     window.updateCount = async (id, val) => { await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) }); };
+    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none'; };
+    window.logout = () => signOut(auth).then(() => location.reload());
+    window.delGen = (col, id) => showAlert("تأكيد الحذف", "سيتم الحذف نهائياً", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
+    
     function listenToAnnouncements() {
         onSnapshot(query(collection(db, "system_notices"), orderBy("createdAt", "desc"), limit(1)), snap => {
             if(!snap.empty) {
                 const data = snap.docs[0].data();
-                document.getElementById('noticeText').innerText = data.text;
-                document.getElementById('globalNotice').style.display = 'block';
+                if(!data.expiresAt || Date.now() < data.expiresAt) {
+                    document.getElementById('noticeText').innerText = data.text;
+                    document.getElementById('globalNotice').style.display = 'block';
+                    return;
+                }
             }
+            document.getElementById('globalNotice').style.display = 'none';
         });
     }
+
 </script>
 </body>
 </html>
