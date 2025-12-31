@@ -44,16 +44,14 @@
         th, td { padding: 10px; border: 1px solid var(--border); text-align: center; }
         th { background: var(--primary); }
 
+        /* تعميم التصميم الجديد */
+        .notice-banner { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 15px; }
+
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* التعديل: شريط الإعلانات */
-        #globalNotice { display: none; background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
-
-<div id="globalNotice">📢 <span id="noticeText"></span></div>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
@@ -75,13 +73,19 @@
     <div class="sidebar-item" onclick="nav('counter')">📊 العدادات والسجل</div>
     <div id="navReports" class="sidebar-item" onclick="nav('reports')">📢 الريبورتات</div>
     <div class="sidebar-item" onclick="nav('notes')">📝 الملاحظات</div>
+    <div class="sidebar-item" onclick="nav('activation')">🛡️ صفحة التفعيل</div>
     <div class="sidebar-item" onclick="nav('settings')">⚙️ الإعدادات</div>
+    <div id="navAnnounce" class="sidebar-item hidden" style="color: var(--success)" onclick="nav('announcements')">📢 إرسال تعميم</div>
     <div id="navAdmin" class="sidebar-item hidden" style="color: var(--admin)" onclick="nav('admin')">🔑 لوحة الإدارة</div>
     <div class="sidebar-item" style="color: var(--danger); margin-top: 50px;" onclick="logout()">🚪 تسجيل الخروج</div>
 </nav>
 
 <div class="container">
     
+    <div id="globalNotice" class="notice-banner">
+        <span>📢 تعميم: </span><span id="noticeText"></span>
+    </div>
+
     <div id="authPage" class="section active">
         <div class="card" id="loginBox" style="max-width: 400px; margin: auto;">
             <h2 style="text-align: center;">تسجيل الدخول</h2>
@@ -146,6 +150,52 @@
         </div>
     </div>
 
+    <div id="activationPage" class="section">
+        <div class="main-layout">
+            <div>
+                <div class="card">
+                    <h3>🎂 حاسبة العمر</h3>
+                    <input type="date" id="birthDate">
+                    <button class="btn btn-primary" onclick="calculateAge()">احسب العمر</button>
+                    <div id="ageResult" style="margin-top:15px; font-weight:bold; color:var(--success)"></div>
+                </div>
+
+                <div class="card">
+                    <h3>❓ إضافة سؤال تفعيل</h3>
+                    <input type="text" id="qText" placeholder="نص السؤال">
+                    <select id="qType" onchange="toggleQOptions()">
+                        <option value="boolean">صح / خطأ</option>
+                        <option value="multiple">خيارات متعددة</option>
+                    </select>
+                    <div id="multipleOptions" class="hidden">
+                        <input type="text" id="opt1" placeholder="الخيار الأول">
+                        <input type="text" id="opt2" placeholder="الخيار الثاني">
+                        <input type="text" id="opt3" placeholder="الخيار الثالث">
+                    </div>
+                    <button class="btn btn-success" onclick="addQuestion()">إضافة السؤال</button>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div>
+                <h3>📋 قائمة الأسئلة المضافة</h3>
+                <div id="questionsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="announcementsPage" class="section">
+        <div class="card" style="max-width: 600px; margin: auto;">
+            <h2 style="text-align: center; color: var(--success);">إرسال تعميم جديد 📢</h2>
+            <textarea id="annText" placeholder="اكتب نص التعميم هنا..." rows="4"></textarea>
+            <label>مدة ظهور التعميم (بالساعات):</label>
+            <input type="number" id="annDuration" placeholder="مثال: 24" value="24">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-success" onclick="sendAnnouncement()">إرسال التعميم</button>
+                <button class="btn btn-danger" onclick="clearAnnouncement()">إلغاء / حذف التعميم الحالي</button>
+            </div>
+        </div>
+    </div>
+
     <div id="notesPage" class="section">
         <div class="card" style="max-width: 600px; margin: auto;">
             <h3>📝 ملاحظة جديدة</h3>
@@ -174,11 +224,6 @@
             <button class="btn btn-admin" style="width: auto; padding: 5px 20px;" onclick="fetchUsersList()">تحديث القائمة 🔄</button>
             <div id="adminUserList" style="margin-top: 20px;"></div>
         </div>
-        <div class="card">
-            <h3 style="color: var(--admin);">📣 إدارة الإعلانات</h3>
-            <input type="text" id="adminNoticeText" placeholder="نص الإعلان الجديد">
-            <button class="btn btn-admin" onclick="updateGlobalNotice()">نشر الإعلان</button>
-        </div>
     </div>
 
 </div>
@@ -186,7 +231,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -239,18 +284,14 @@
         if (user) {
             curUser = user;
             const d = await getDoc(doc(db, "users", user.uid));
-            if(d.exists()) {
-                userData = d.data();
-                applyPermissions();
-                nav('counter');
-                initListeners();
-                listenToAnnouncements(); // التعديل: تفعيل مستمع الإعلانات
-                document.getElementById('userBadge').innerText = userData.role;
-                renderSettings(); // التعديل: عرض البيانات في الإعدادات
-            }
+            userData = d.data();
+            applyPermissions();
+            nav('counter');
+            initListeners();
+            listenToAnnouncements();
+            document.getElementById('userBadge').innerText = userData.role;
         } else {
             nav('auth');
-            document.getElementById('globalNotice').style.display = 'none';
         }
     });
 
@@ -258,14 +299,20 @@
         const role = userData.role;
         const navReports = document.getElementById('navReports');
         const navAdmin = document.getElementById('navAdmin');
+        const navAnnounce = document.getElementById('navAnnounce');
         
         navReports.classList.add('hidden');
         navAdmin.classList.add('hidden');
+        navAnnounce.classList.add('hidden');
 
         if (role === 'Admin') {
             navReports.classList.remove('hidden');
             navAdmin.classList.remove('hidden');
-        } else if (role === 'Managment' || role === 'Support') {
+            navAnnounce.classList.remove('hidden');
+        } else if (role === 'Managment') {
+            navReports.classList.remove('hidden');
+            navAnnounce.classList.remove('hidden');
+        } else if (role === 'Support') {
             navReports.classList.remove('hidden');
         }
         loadRepCategories();
@@ -309,7 +356,6 @@
                     createdAt: Date.now()
                 });
                 await batch.commit();
-                showAlert("نجاح", "تم النقل وتصفير العدادات");
             }
         });
     };
@@ -317,6 +363,7 @@
     // --- الريبورتات ---
     function loadRepCategories() {
         const sel = document.getElementById('repCat');
+        if(!sel) return;
         sel.innerHTML = '<option value="">-- اختر التصنيف --</option>';
         const roles = {
             "reportr": "Reportr", "summon": "استدعاء", "steam": "Steam", "clothes": "ملابس", "rp": "RP", "gangs": "عصابات/عساكر", "general": "عامة"
@@ -349,6 +396,71 @@
         showAlert("تم النسخ", "تم نسخ النص بنجاح ✅");
     };
 
+    // --- دوال صفحة التفعيل الجديدة ---
+    window.calculateAge = () => {
+        const birth = document.getElementById('birthDate').value;
+        if(!birth) return;
+        const age = Math.floor((new Date() - new Date(birth)) / (365.25 * 24 * 60 * 60 * 1000));
+        document.getElementById('ageResult').innerText = `العمر التقريبي: ${age} سنة`;
+    };
+
+    window.toggleQOptions = () => {
+        const type = document.getElementById('qType').value;
+        document.getElementById('multipleOptions').classList.toggle('hidden', type !== 'multiple');
+    };
+
+    window.addQuestion = async () => {
+        const text = document.getElementById('qText').value;
+        const type = document.getElementById('qType').value;
+        if(!text) return;
+        
+        let opts = [];
+        if(type === 'multiple') {
+            opts = [document.getElementById('opt1').value, document.getElementById('opt2').value, document.getElementById('opt3').value];
+        }
+        
+        await addDoc(collection(db, "users", curUser.uid, "activation_questions"), {
+            text, type, opts, createdAt: Date.now()
+        });
+        document.getElementById('qText').value = '';
+    };
+
+    // --- نظام التعاميم ---
+    window.sendAnnouncement = async () => {
+        const text = document.getElementById('annText').value;
+        const hours = parseInt(document.getElementById('annDuration').value);
+        if(!text) return showAlert("خطأ", "اكتب نص التعميم");
+        
+        const expiresAt = Date.now() + (hours * 60 * 60 * 1000);
+        await setDoc(doc(db, "system_notices", "current"), {
+            text, expiresAt, createdAt: Date.now(), sender: userData.u
+        });
+        showAlert("تم", "تم إرسال التعميم بنجاح ✅");
+        document.getElementById('annText').value = '';
+    };
+
+    window.clearAnnouncement = async () => {
+        await deleteDoc(doc(db, "system_notices", "current"));
+        showAlert("تم", "تم حذف التعميم");
+    };
+
+    function listenToAnnouncements() {
+        onSnapshot(doc(db, "system_notices", "current"), (snap) => {
+            const banner = document.getElementById('globalNotice');
+            if(snap.exists()) {
+                const data = snap.data();
+                if(Date.now() < data.expiresAt) {
+                    document.getElementById('noticeText').innerText = data.text;
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+        });
+    }
+
     // --- الملاحظات ---
     window.addNote = async () => {
         const t = document.getElementById('noteInput').value;
@@ -365,101 +477,31 @@
         }, html);
     };
 
-    // --- لوحة الإدارة ---
-    window.fetchUsersList = async () => {
-        const div = document.getElementById('adminUserList');
-        div.innerHTML = "جارِ التحميل...";
-        const q = await getDocs(collection(db, "users"));
-        div.innerHTML = '';
-        q.forEach(d => {
-            const u = d.data();
-            div.innerHTML += `
-                <div class="card" style="font-size: 0.9rem;">
-                    <b>${u.u}</b> (${u.role}) - ${u.e}
-                    <div style="display: flex; gap: 5px; margin-top: 10px;">
-                        <button class="btn btn-primary" onclick="adminEditUser('${d.id}', '${u.u}', '${u.role}')">تعديل</button>
-                        <button class="btn btn-danger" onclick="adminDelUser('${d.id}')">حذف</button>
-                    </div>
-                </div>`;
-        });
-    };
-
-    window.adminEditUser = (id, name, role) => {
-        const html = `
-            <input id="adU" value="${name}">
-            <select id="adR">
-                <option value="User" ${role==='User'?'selected':''}>User</option>
-                <option value="Support" ${role==='Support'?'selected':''}>Support</option>
-                <option value="Managment" ${role==='Managment'?'selected':''}>Managment</option>
-                <option value="Admin" ${role==='Admin'?'selected':''}>Admin</option>
-            </select>
-        `;
-        showAlert("تعديل مستخدم", "", "confirm", async () => {
-            const newU = document.getElementById('adU').value;
-            const newR = document.getElementById('adR').value;
-            await updateDoc(doc(db, "users", id), { u: newU, role: newR });
-            fetchUsersList();
-        }, html);
-    };
-
-    window.adminDelUser = (id) => {
-        showAlert("حذف مستخدم", "سيتم حذف بيانات المستخدم، لكن لن يتم حذفه من نظام المصادقة", "confirm", async () => {
-            await deleteDoc(doc(db, "users", id));
-            fetchUsersList();
-        });
-    };
-
-    // التعديل: دالة تحديث الإعلان للادمن
-    window.updateGlobalNotice = async () => {
-        const txt = document.getElementById('adminNoticeText').value;
-        if(!txt) return showAlert("خطأ", "اكتب نص الإعلان");
-        await addDoc(collection(db, "system_notices"), {
-            text: txt,
-            createdAt: Date.now(),
-            author: userData.u
-        });
-        document.getElementById('adminNoticeText').value = '';
-        showAlert("تم", "تم نشر الإعلان بنجاح");
-    };
-
-    // التعديل: مستمع الإعلانات
-    function listenToAnnouncements() {
-        onSnapshot(query(collection(db, "system_notices"), orderBy("createdAt", "desc"), limit(1)), snap => {
-            if(!snap.empty) {
-                const data = snap.docs[0].data();
-                document.getElementById('noticeText').innerText = data.text;
-                document.getElementById('globalNotice').style.display = 'block';
-            }
-        });
-    }
-
     // --- المستمعات ---
     function initListeners() {
+        // مستمع العدادات
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "asc")), (snap) => {
             const list = document.getElementById('countersList');
             list.innerHTML = '';
             let items = [];
             snap.forEach(d => items.push({ id: d.id, ...d.data() }));
             items.sort((a, b) => (a.c >= a.g) - (b.c >= b.g));
-
             items.forEach(x => {
                 const isDone = x.c >= x.g;
                 list.innerHTML += `
                     <div class="counter-item ${isDone ? 'completed' : ''}">
                         <div style="font-weight: 900;">${x.n}</div>
                         <div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div>
-                        <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 10px;">
-                            ${isDone ? '✅ تم إنجاز الهدف' : `باقي لك ${x.g - x.c} لإنجاز الهدف`}
-                        </div>
                         <div style="display: flex; gap: 5px;">
                             <button class="btn btn-primary" onclick="updateCount('${x.id}', ${x.c+1}, ${x.g})">+</button>
                             <button class="btn btn-danger" onclick="updateCount('${x.id}', ${x.c-1}, ${x.g})">-</button>
                         </div>
-                        <button class="btn" style="background: none; color: var(--danger); font-size: 0.7rem; margin-top: 5px;" onclick="delGen('counters', '${x.id}')">حذف العداد</button>
+                        <button class="btn" style="background: none; color: var(--danger); font-size: 0.7rem;" onclick="delGen('counters', '${x.id}')">حذف</button>
                     </div>`;
             });
         });
 
+        // مستمع الملاحظات
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('notesList');
             list.innerHTML = '';
@@ -470,28 +512,36 @@
                         <pre style="white-space: pre-wrap; font-family: Cairo; font-size: 0.9rem;">${n.t}</pre>
                         <div style="display: flex; gap: 10px; margin-top: 10px;">
                             <button class="btn btn-primary" style="padding: 5px;" onclick="editNote('${d.id}', \`${n.t}\`)">تعديل</button>
-                            <button class="btn btn-success" style="padding: 5px;" onclick="copyTxt(\`${n.t}\`)">نسخ</button>
                             <button class="btn btn-danger" style="padding: 5px;" onclick="delGen('notes', '${d.id}')">حذف</button>
                         </div>
                     </div>`;
             });
         });
 
+        // مستمع أسئلة التفعيل
+        onSnapshot(query(collection(db, "users", curUser.uid, "activation_questions"), orderBy("createdAt", "desc")), (snap) => {
+            const list = document.getElementById('questionsList');
+            list.innerHTML = '';
+            snap.forEach(d => {
+                const q = d.data();
+                let optsHtml = q.type === 'multiple' ? `<div style="font-size:0.8rem; color:gray">الخيارات: ${q.opts.filter(o=>o).join(' - ')}</div>` : '';
+                list.innerHTML += `
+                    <div class="card">
+                        <b>${q.text}</b> (${q.type === 'boolean' ? 'صح/خطأ' : 'اختيارات'})
+                        ${optsHtml}
+                        <button class="btn btn-danger" style="margin-top:10px; padding:2px" onclick="delGen('activation_questions', '${d.id}')">حذف</button>
+                    </div>`;
+            });
+        });
+
+        // مستمع الإحصائيات
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('statsList');
             list.innerHTML = '';
             snap.forEach(d => {
                 const s = d.data();
                 let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
-                list.innerHTML += `
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 10px;">
-                            <b onclick="editStatTitle('${d.id}', '${s.title}')" style="cursor: pointer;">${s.title} ✏️</b>
-                            <span>${s.date}</span>
-                        </div>
-                        <table><tr><th>العداد</th><th>العدد</th></tr>${rows}</table>
-                        <button class="btn btn-danger" style="margin-top: 10px; padding: 5px;" onclick="delGen('stats', '${d.id}')">حذف السجل</button>
-                    </div>`;
+                list.innerHTML += `<div class="card"><b>${s.title}</b> - ${s.date}<table>${rows}</table><button class="btn btn-danger" onclick="delGen('stats', '${d.id}')">حذف</button></div>`;
             });
         });
     }
@@ -509,85 +559,36 @@
         s.classList.toggle('open', isOpen);
         o.style.display = isOpen ? 'block' : 'none';
     };
+    window.logout = () => signOut(auth).then(() => location.reload());
+    window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => {
+        await deleteDoc(doc(db, "users", curUser.uid, col, id));
+    });
+
     window.toggleAuth = (reg) => {
         document.getElementById('loginBox').classList.toggle('hidden', reg);
         document.getElementById('regBox').classList.toggle('hidden', !reg);
     };
-    window.copyTxt = async (t) => { await navigator.clipboard.writeText(t); showAlert("نسخ", "تم نسخ النص!"); };
-    window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد الحذف", "هل أنت متأكد؟ لا يمكن التراجع عن هذه الخطوة.", "confirm", async () => {
-        await deleteDoc(doc(db, "users", curUser.uid, col, id));
-    });
 
-    // --- الدخول والإنشاء ---
     window.handleLogin = async () => {
-        const u = document.getElementById('lUser').value;
-        const p = document.getElementById('lPass').value;
-        const rem = document.getElementById('remMe').checked;
-        if(!u || !p) return showAlert("خطأ", "أدخل البيانات");
+        const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value, rem = document.getElementById('remMe').checked;
         try {
             await setPersistence(auth, rem ? browserLocalPersistence : browserSessionPersistence);
             let email = u;
-            if (!u.includes('@')) {
+            if(!u.includes('@')) {
                 const q = await getDocs(query(collection(db, "users"), where("u", "==", u)));
-                if (q.empty) throw new Error("المستخدم غير موجود");
+                if(q.empty) throw new Error();
                 email = q.docs[0].data().e;
             }
             await signInWithEmailAndPassword(auth, email, p);
-        } catch (e) { showAlert("خطأ", "بيانات الدخول غير صحيحة"); }
+        } catch { showAlert("خطأ", "البيانات غير صحيحة"); }
     };
 
     window.handleReg = async () => {
-        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value, pc = document.getElementById('rPC').value;
-        if (!u || !e || !p) return showAlert("خطأ", "أكمل الحقول");
-        if (p !== pc) return showAlert("خطأ", "كلمات المرور غير متطابقة");
+        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value;
         try {
             const res = await createUserWithEmailAndPassword(auth, e, p);
             await setDoc(doc(db, "users", res.user.uid), { u, e, role: 'User', createdAt: Date.now() });
-        } catch (e) { showAlert("خطأ", "فشل التسجيل: " + e.message); }
-    };
-
-    window.forgotPass = () => {
-        const email = prompt("أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور:");
-        if(email) {
-            sendPasswordResetEmail(auth, email).then(() => showAlert("تم", "تأكد من بريدك الإلكتروني")).catch(e => showAlert("خطأ", e.message));
-        }
-    };
-
-    window.editStatTitle = (id, old) => {
-        const html = `<input id="newStatT" value="${old}">`;
-        showAlert("تعديل الاسم", "", "confirm", async () => {
-            const nt = document.getElementById('newStatT').value;
-            await updateDoc(doc(db, "users", curUser.uid, "stats", id), { title: nt });
-        }, html);
-    };
-
-    // التعديل: عرض بيانات المستخدم في الإعدادات
-    function renderSettings() {
-        const info = document.getElementById('userSettingsInfo');
-        if(userData) {
-            info.innerHTML = `
-                <p><b>الاسم:</b> ${userData.u}</p>
-                <p><b>الإيميل:</b> ${userData.e}</p>
-                <p><b>الرتبة:</b> ${userData.role}</p>
-            `;
-        }
-    }
-
-    window.updateProfile = async () => {
-        const newU = document.getElementById('updateU').value;
-        const newP = document.getElementById('updateP').value;
-        if(newU) await updateDoc(doc(db, "users", curUser.uid), { u: newU });
-        // تغيير كلمة المرور يتطلب re-authentication عادة، هنا نحدث الاسم فقط للتبسيط
-        showAlert("تم", "تم تحديث البيانات بنجاح");
-        location.reload();
-    };
-
-    window.deleteMyAccount = () => {
-        showAlert("حذف الحساب", "هل أنت متأكد؟ سيتم حذف بياناتك من القاعدة", "confirm", async () => {
-            await deleteDoc(doc(db, "users", curUser.uid));
-            curUser.delete().then(() => location.reload());
-        });
+        } catch(err) { showAlert("خطأ", err.message); }
     };
 
 </script>
