@@ -283,17 +283,15 @@
 
     function applyPermissions() {
         const role = userData.role;
-        // أذونات صفحة التفعيل (Admin, Management, Support)
         const canActivate = ['Admin', 'Managment', 'Support'].includes(role);
         document.getElementById('navActivation').classList.toggle('hidden', !canActivate);
-        
         document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
         document.getElementById('navAdmin').classList.toggle('hidden', role !== 'Admin');
         document.getElementById('navAnnounce').classList.toggle('hidden', !['Admin', 'Managment'].includes(role));
         loadRepCategories();
     }
 
-    // --- Admin Functions (Edit User) ---
+    // --- Admin Functions ---
     window.fetchUsersList = async () => {
         const listDiv = document.getElementById('adminUserList');
         listDiv.innerHTML = 'جاري التحميل...';
@@ -303,14 +301,7 @@
             q.forEach(docSnap => {
                 const u = docSnap.data();
                 const id = docSnap.id;
-                h += `<tr>
-                    <td>${u.u}</td>
-                    <td>${u.role}</td>
-                    <td>${u.e}</td>
-                    <td>
-                        <button class="status-btn active-warn" onclick="editUserPrompt('${id}', '${u.u}', '${u.role}')">تعديل ⚙️</button>
-                    </td>
-                </tr>`;
+                h += `<tr><td>${u.u}</td><td>${u.role}</td><td>${u.e}</td><td><button class="status-btn active-warn" onclick="editUserPrompt('${id}', '${u.u}', '${u.role}')">تعديل ⚙️</button></td></tr>`;
             });
             h += '</tbody></table>';
             listDiv.innerHTML = h;
@@ -318,32 +309,15 @@
     };
 
     window.editUserPrompt = (uid, name, role) => {
-        const html = `
-            <input type="text" id="editU" value="${name}" placeholder="الاسم الجديد">
-            <select id="editR">
-                <option value="User" ${role==='User'?'selected':''}>User</option>
-                <option value="Support" ${role==='Support'?'selected':''}>Support</option>
-                <option value="Managment" ${role==='Managment'?'selected':''}>Managment</option>
-                <option value="Admin" ${role==='Admin'?'selected':''}>Admin</option>
-            </select>
-            <input type="password" id="editP" placeholder="كلمة سر جديدة (اتركها فارغة لعدم التغيير)">
-            <button class="btn btn-primary" onclick="saveUserEdit('${uid}')">حفظ التغييرات</button>
-        `;
+        const html = `<input type="text" id="editU" value="${name}" placeholder="الاسم الجديد"><select id="editR"><option value="User" ${role==='User'?'selected':''}>User</option><option value="Support" ${role==='Support'?'selected':''}>Support</option><option value="Managment" ${role==='Managment'?'selected':''}>Managment</option><option value="Admin" ${role==='Admin'?'selected':''}>Admin</option></select><input type="password" id="editP" placeholder="كلمة سر جديدة"><button class="btn btn-primary" onclick="saveUserEdit('${uid}')">حفظ التغييرات</button>`;
         showAlert("تعديل بيانات المستخدم", "", "ok", null, html);
     };
 
     window.saveUserEdit = async (uid) => {
-        const newU = document.getElementById('editU').value;
-        const newR = document.getElementById('editR').value;
-        const newP = document.getElementById('editP').value;
+        const newU = document.getElementById('editU').value, newR = document.getElementById('editR').value;
         try {
             await updateDoc(doc(db, "users", uid), { u: newU, role: newR });
-            if(newP) {
-                showAlert("ملاحظة", "تغيير كلمة السر يتطلب صلاحيات Firebase Auth كمسؤول أو تسجيل دخول المستخدم.");
-            }
-            closeModal();
-            fetchUsersList();
-            showAlert("تم", "تحديث البيانات بنجاح");
+            closeModal(); fetchUsersList(); showAlert("تم", "تحديث البيانات بنجاح");
         } catch(e) { showAlert("خطأ", "فشل التحديث"); }
     };
 
@@ -353,8 +327,7 @@
     };
 
     window.addQuestion = async () => {
-        const text = document.getElementById('qText').value;
-        const type = document.getElementById('qType').value;
+        const text = document.getElementById('qText').value, type = document.getElementById('qType').value;
         if(!text) return;
         let opts = [];
         if(type === 'multiple') {
@@ -368,24 +341,24 @@
         ['opt1','opt2','opt3','opt4','opt5','opt6'].forEach(id => document.getElementById(id).value = '');
     };
 
-    // تحديد الإجابة (سواء صح/خطأ أو اختيارات)
-    window.selectAnswer = (btn, status = null) => {
-        const parent = btn.parentElement;
-        parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected', 'active-success', 'active-danger', 'active-warn'));
-        
-        if (status) {
+    // التعديل هنا: وظيفة اختيار الإجابة تدعم الاختيار المتعدد
+    window.selectAnswer = (btn, isBoolean = false, status = null) => {
+        if (isBoolean) {
+            // في حالة صح/خطأ، نسمح باختيار واحد فقط كما في السابق
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected', 'active-success', 'active-danger', 'active-warn'));
             if(status === 'correct') btn.classList.add('active-success', 'selected');
             if(status === 'wrong') btn.classList.add('active-danger', 'selected');
             if(status === 'warn') btn.classList.add('active-warn', 'selected');
         } else {
-            btn.classList.add('selected');
+            // في حالة خيارات متعددة، نقوم بتبديل (Toggle) الاختيار بدون حذف البقية
+            btn.classList.toggle('selected');
         }
     };
 
     // --- Counters ---
     window.addCounter = async () => {
-        const n = document.getElementById('counterName').value;
-        const g = parseInt(document.getElementById('counterGoal').value);
+        const n = document.getElementById('counterName').value, g = parseInt(document.getElementById('counterGoal').value);
         if (!n || !g) return;
         await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g, c: 0, createdAt: Date.now() });
         document.getElementById('counterName').value = ''; document.getElementById('counterGoal').value = '';
@@ -400,17 +373,10 @@
     window.transferToStats = async () => {
         showAlert("نقل البيانات", "تصفير العدادات ونقلها للسجل؟", "confirm", async () => {
             const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
-            let data = [];
-            const batch = writeBatch(db);
-            q.forEach(d => {
-                data.push({ n: d.data().n, c: d.data().c });
-                batch.update(d.ref, { c: 0 });
-            });
+            let data = []; const batch = writeBatch(db);
+            q.forEach(d => { data.push({ n: d.data().n, c: d.data().c }); batch.update(d.ref, { c: 0 }); });
             if (data.length > 0) {
-                await addDoc(collection(db, "users", curUser.uid, "stats"), {
-                    title: "سجل جديد", date: new Date().toLocaleString('ar-EG'),
-                    data: data, createdAt: Date.now()
-                });
+                await addDoc(collection(db, "users", curUser.uid, "stats"), { title: "سجل جديد", date: new Date().toLocaleString('ar-EG'), data: data, createdAt: Date.now() });
                 await batch.commit();
             }
         });
@@ -422,14 +388,7 @@
             const list = document.getElementById('countersList'); list.innerHTML = '';
             snap.forEach(d => {
                 const x = d.data(); const isDone = x.c >= x.g;
-                list.innerHTML += `<div class="counter-item ${isDone ? 'completed' : ''}">
-                    <b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div>
-                    <div style="display: flex; gap: 5px;">
-                        <button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1}, ${x.g})">+</button>
-                        <button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1}, ${x.g})">-</button>
-                    </div>
-                    <button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button>
-                </div>`;
+                list.innerHTML += `<div class="counter-item ${isDone ? 'completed' : ''}"><b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div><div style="display: flex; gap: 5px;"><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1}, ${x.g})">+</button><button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1}, ${x.g})">-</button></div><button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button></div>`;
             });
         });
 
@@ -439,36 +398,26 @@
                 const q = d.data();
                 let btns = '';
                 if(q.type === 'boolean') {
-                    btns = `
-                        <button class="status-btn" onclick="selectAnswer(this, 'correct')">✅ صح</button>
-                        <button class="status-btn" onclick="selectAnswer(this, 'wrong')">❌ خطأ</button>
-                        <button class="status-btn" onclick="selectAnswer(this, 'warn')">⚠️ تنبيه</button>
-                    `;
+                    btns = `<button class="status-btn" onclick="selectAnswer(this, true, 'correct')">✅ صح</button><button class="status-btn" onclick="selectAnswer(this, true, 'wrong')">❌ خطأ</button><button class="status-btn" onclick="selectAnswer(this, true, 'warn')">⚠️ تنبيه</button>`;
                 } else {
-                    btns = q.opts.map(o => `<button class="status-btn" onclick="selectAnswer(this)">${o}</button>`).join('');
+                    // التعديل هنا ليدعم الضغط المتعدد
+                    btns = q.opts.map(o => `<button class="status-btn" onclick="selectAnswer(this, false)">${o}</button>`).join('');
                 }
-                list.innerHTML += `
-                    <div class="card">
-                        <b>${q.text}</b> <span style="font-size:0.7rem; color:var(--primary)">(${q.type==='boolean'?'صح/خطأ':'اختيار'})</span>
-                        <div class="status-btns">${btns}</div>
-                        <button class="btn btn-danger" style="margin-top:10px; padding:2px; font-size:0.7rem" onclick="delGen('activation_questions', '${d.id}')">حذف السؤال</button>
-                    </div>`;
+                list.innerHTML += `<div class="card"><b>${q.text}</b> <span style="font-size:0.7rem; color:var(--primary)">(${q.type==='boolean'?'صح/خطأ':'اختيار متعدد'})</span><div class="status-btns">${btns}</div><button class="btn btn-danger" style="margin-top:10px; padding:2px; font-size:0.7rem" onclick="delGen('activation_questions', '${d.id}')">حذف السؤال</button></div>`;
             });
         });
 
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('notesList'); list.innerHTML = '';
             snap.forEach(d => {
-                list.innerHTML += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo;">${d.data().t}</pre>
-                <button class="btn btn-danger" style="padding:5px" onclick="delGen('notes', '${d.id}')">حذف</button></div>`;
+                list.innerHTML += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo;">${d.data().t}</pre><button class="btn btn-danger" style="padding:5px" onclick="delGen('notes', '${d.id}')">حذف</button></div>`;
             });
         });
 
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('statsList'); list.innerHTML = '';
             snap.forEach(d => {
-                const s = d.data();
-                let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
+                const s = d.data(); let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
                 list.innerHTML += `<div class="card"><b>${s.title}</b> - ${s.date}<table>${rows}</table><button class="btn btn-danger" onclick="delGen('stats', '${d.id}')">حذف</button></div>`;
             });
         });
@@ -538,8 +487,7 @@
         sel.innerHTML = '<option value="">-- اختر التصنيف --</option><option value="general">عامة</option>';
     };
     window.loadRepOptions = () => {
-        const sub = document.getElementById('repSub');
-        sub.innerHTML = '<option value="سيتم خدمتك">سيتم خدمتك</option>';
+        const sub = document.getElementById('repSub'); sub.innerHTML = '<option value="سيتم خدمتك">سيتم خدمتك</option>';
     };
     window.copyReport = async (mode) => {
         const msg = document.getElementById('repSub').value;
