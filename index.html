@@ -40,19 +40,15 @@
         .counter-item { background: var(--bg); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; transition: 0.3s; }
         .counter-item.completed { border-color: var(--success); opacity: 0.7; order: 2; }
 
-        /* جدول الإحصائيات */
-        .stats-table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; background: var(--card); }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); color: var(--text); }
+        /* تنسيق جدول الإحصائيات */
+        .stats-table-wrapper { overflow-x: auto; margin-top: 10px; border-radius: 10px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: var(--card); min-width: 450px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); color: var(--text); font-size: 0.9rem; }
         th { background: var(--primary); color: white; font-weight: bold; }
         tr:hover { background: rgba(255,255,255,0.05); }
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 5000; backdrop-filter: blur(5px); }
         .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; text-align: center; border: 1px solid var(--border); }
-
-        .q-option { background: var(--bg); padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin: 5px 0; cursor: pointer; transition: 0.2s; }
-        .q-option.selected { border-color: var(--primary); background: rgba(99, 102, 241, 0.2); }
-        .q-option.tf-selected { border-color: var(--success); background: rgba(16, 185, 129, 0.2); }
 
         .notice-banner { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 15px; }
         .info-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
@@ -192,19 +188,6 @@
                     <button class="btn btn-primary" onclick="calculateAge()">احسب العمر</button>
                     <div id="ageResult" style="margin-top:15px; font-weight:bold; text-align:center;"></div>
                 </div>
-                <div class="card">
-                    <h3>➕ إضافة أسئلة (إدارة)</h3>
-                    <input type="text" id="qText" placeholder="نص السؤال">
-                    <select id="qType" onchange="toggleMcqInputs()">
-                        <option value="mcq">إختيار من متعدد</option>
-                        <option value="tf">صح أو خطأ</option>
-                    </select>
-                    <div id="mcqOptions">
-                        <input type="text" class="opt-in" placeholder="خيار 1">
-                        <input type="text" class="opt-in" placeholder="خيار 2">
-                    </div>
-                    <button class="btn btn-admin" onclick="addQuestion()">إضافة السؤال</button>
-                </div>
             </div>
             <div class="divider"></div>
             <div>
@@ -218,15 +201,12 @@
         <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ إعدادات الحساب</h3>
             <div id="userDetailsBox">
-                <div class="info-row"><span>اسم المستخدم:</span><span id="setUName"></span></div>
+                <div class="info-row"><span>اليوزر:</span><span id="setUName"></span></div>
                 <div class="info-row"><span>الرتبة:</span><span id="setUserRole"></span></div>
-                <div class="info-row"><span>الإيميل:</span><span id="setUserEmail"></span></div>
                 <div class="info-row"><span>ديسكورد:</span><span id="setUserDiscord"></span></div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
                 <button class="btn btn-primary" onclick="promptUpdate('u')">تعديل اليوزر</button>
-                <button class="btn btn-primary" onclick="promptUpdate('e')">تعديل الإيميل</button>
-                <button class="btn btn-primary" onclick="promptUpdate('d')">تعديل الديسكورد</button>
                 <button class="btn btn-admin" onclick="requestRank()">طلب رتبة</button>
             </div>
         </div>
@@ -235,7 +215,16 @@
     <div id="adminPage" class="section">
         <div class="card">
             <h3 style="color: var(--admin);">👥 إدارة المستخدمين</h3>
-            <div id="adminUserList"></div>
+            <div id="adminUserList" style="overflow-x: auto;"></div>
+        </div>
+    </div>
+
+    <div id="announcementsPage" class="section">
+        <div class="card" style="max-width: 600px; margin: auto;">
+            <h2>📢 إدارة التعميمات</h2>
+            <textarea id="annText" placeholder="نص التعميم..."></textarea>
+            <button class="btn btn-success" onclick="sendAnnouncement()">نشر التعميم</button>
+            <button class="btn btn-danger" style="margin-top:10px" onclick="deleteAnnouncement()">حذف التعميم 🗑️</button>
         </div>
     </div>
 </div>
@@ -260,7 +249,7 @@
 
     let curUser = null, userData = null;
 
-    // --- Modal System ---
+    // --- نظام التنبيهات ---
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, customHtml = null) => {
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerHTML = customHtml ? customHtml : `<p>${msg}</p>`;
@@ -285,12 +274,13 @@
             applyPermissions();
             updateSettingsUI();
             initListeners();
+            listenToAnnouncements();
             nav('counter');
             document.getElementById('userBadge').innerText = userData.role;
         } else nav('auth');
     });
 
-    // --- العدادات (جنباً إلى جنب + دمج النقل والتصفير) ---
+    // --- وظائف العدادات ---
     window.addCounter = async () => {
         const n = document.getElementById('counterName').value;
         const g = document.getElementById('counterGoal').value;
@@ -304,8 +294,10 @@
         await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
     };
 
+    window.delCounter = (id) => showAlert("تأكيد", "حذف العداد؟", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, "counters", id)); });
+
     window.transferAndResetAll = async () => {
-        showAlert("تأكيد العملية", "سيتم نقل الإحصائيات للجدول وتصفير كافة العدادات الآن؟", "confirm", async () => {
+        showAlert("تأكيد العملية", "سيتم حفظ البيانات في الجدول وتصفير العدادات، هل أنت متأكد؟", "confirm", async () => {
             const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
             if(q.empty) return;
             let summary = "";
@@ -316,86 +308,89 @@
             });
             await addDoc(collection(db, "users", curUser.uid, "stats"), { text: summary, date: new Date().toLocaleString('ar-EG'), createdAt: Date.now() });
             await batch.commit();
-            showAlert("تم", "تم النقل والتصفير بنجاح ✅");
+            showAlert("تم", "تمت المزامنة بنجاح ✅");
         });
     };
 
-    // --- الملاحظات (إصلاح الزر) ---
+    // --- الملاحظات وحساب العمر ---
     window.addNote = async () => {
         const t = document.getElementById('noteInput').value;
-        if(!t) return showAlert("تنبيه", "اكتب ملاحظة أولاً");
+        if(!t) return;
         await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
         document.getElementById('noteInput').value = '';
     };
 
-    // --- الإحصائيات (تعديل الاسم في الجدول) ---
-    window.editStatPrompt = (id, oldText) => {
-        const html = `<textarea id="newStatText" rows="4">${oldText}</textarea><button class="btn btn-success" onclick="saveStatEdit('${id}')">حفظ</button>`;
-        showAlert("تعديل البيانات", "", "ok", null, html);
+    window.copyNote = async (text) => {
+        await navigator.clipboard.writeText(text);
+        showAlert("تم", "تم نسخ الملاحظة");
     };
 
-    window.saveStatEdit = async (id) => {
-        const text = document.getElementById('newStatText').value;
-        await updateDoc(doc(db, "users", curUser.uid, "stats", id), { text });
-        closeModal();
-    };
-
-    // --- التفعيل وحساب العمر ---
     window.calculateAge = () => {
         const birth = new Date(document.getElementById('birthDate').value);
-        if(!birth) return;
+        if(isNaN(birth)) return;
         const age = Math.floor((new Date() - birth) / (1000 * 60 * 60 * 24 * 365.25));
         const res = document.getElementById('ageResult');
         res.innerText = `العمر: ${age} سنة`;
         res.style.color = age >= 16 ? 'var(--success)' : 'var(--danger)';
     };
 
-    // --- تهيئة البيانات ---
+    // --- نظام الريبورتات ---
+    const reportData = {
+        "reportr": ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان"],
+        "summon": ["استدعاء مراقبة دورية", "احفظ تصوير 20 دقيقة"],
+        "clothes": ["لبس غير مناسب", "تغيير الحزام", "تعديل ملابس الوظيفة"],
+        "rp": ["تقدير موقف واقعي", "تقمص الشخصية"],
+        "crime": ["يمنع التقديح", "التخريم ممنوع"],
+        "general": ["طلب مسعف والانتظار", "يمنع الكذب"]
+    };
+
+    window.updateSubReasons = () => {
+        const cat = document.getElementById('repCategory').value;
+        const resBox = document.getElementById('repReason');
+        resBox.innerHTML = '';
+        if(reportData[cat]) reportData[cat].forEach(r => {
+            const opt = document.createElement('option'); opt.value = r; opt.innerText = r;
+            resBox.appendChild(opt);
+        });
+    };
+
+    window.copyFullReport = async (mode) => {
+        const id = document.getElementById('repGameID').value;
+        const disc = document.getElementById('repDiscordID').value;
+        const msg = document.getElementById('repReason').value;
+        if(!id || !msg) return showAlert("تنبيه", "أكمل البيانات");
+        const text = mode === 'in' ? `/reportr ${id} ${msg}` : `${msg} \n <@${disc}>`;
+        await navigator.clipboard.writeText(text);
+        showAlert("تم النسخ", mode === 'in' ? "نص داخلي" : "نص خارجي");
+    };
+
+    // --- تحديث البيانات والواجهة ---
     function initListeners() {
-        // العدادات (Grid)
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('countersList'); list.innerHTML = '';
             snap.forEach(d => {
                 const x = d.data(); const done = x.c >= x.g;
-                list.innerHTML += `
-                    <div class="counter-item ${done ? 'completed' : ''}">
-                        <b>${x.n}</b>
-                        <div style="font-size:1.3rem; margin:10px 0;">${x.c}/${x.g}</div>
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1})">+</button>
-                            <button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1})">-</button>
-                        </div>
-                    </div>`;
+                list.innerHTML += `<div class="counter-item ${done ? 'completed' : ''}"><b>${x.n}</b><div style="font-size:1.3rem; margin:10px 0;">${x.c}/${x.g}</div><div style="display:flex; gap:5px;"><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1})">+</button><button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1})">-</button><button class="btn" style="background:#4b5563; color:white" onclick="delCounter('${d.id}')">🗑️</button></div></div>`;
             });
         });
 
-        // جدول الإحصائيات
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             const body = document.getElementById('statsTableBody'); body.innerHTML = '';
             snap.forEach(d => {
                 const x = d.data();
-                body.innerHTML += `
-                    <tr>
-                        <td>${x.date}</td>
-                        <td style="font-size:0.8rem">${x.text}</td>
-                        <td>
-                            <button class="btn btn-admin" style="padding:4px; font-size:0.7rem" onclick="editStatPrompt('${d.id}','${x.text}')">تعديل</button>
-                            <button class="btn btn-danger" style="padding:4px; font-size:0.7rem" onclick="delGen('stats','${d.id}')">حذف</button>
-                        </td>
-                    </tr>`;
+                body.innerHTML += `<tr><td>${x.date}</td><td style="font-size:0.8rem">${x.text}</td><td><button class="btn btn-danger" style="padding:4px; font-size:0.7rem; width:auto" onclick="delGen('stats','${d.id}')">حذف</button></td></tr>`;
             });
         });
 
-        // الملاحظات
         onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
             const nList = document.getElementById('notesList'); nList.innerHTML = '';
             snap.forEach(d => {
-                nList.innerHTML += `<div class="card"><p>${d.data().t}</p><button class="btn btn-danger" style="width:auto; padding:5px 15px" onclick="delGen('notes','${d.id}')">حذف</button></div>`;
+                nList.innerHTML += `<div class="card"><p>${d.data().t}</p><div style="display:flex; gap:5px"><button class="btn btn-primary" style="padding:5px" onclick="copyNote('${d.data().t}')">نسخ</button><button class="btn btn-danger" style="padding:5px" onclick="delGen('notes','${d.id}')">حذف</button></div></div>`;
             });
         });
     }
 
-    // --- الدوال المساعدة ---
+    // --- التنقل والملاحة ---
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + 'Page').classList.add('active');
@@ -443,15 +438,32 @@
         const r = userData.role;
         document.getElementById('navAdmin').classList.toggle('hidden', r !== 'Admin');
         document.getElementById('navReports').classList.toggle('hidden', r === 'User');
-        document.getElementById('navActivation').classList.toggle('hidden', !['Admin','Support'].includes(r));
+        document.getElementById('navAnnounce').classList.toggle('hidden', r !== 'Admin');
     }
 
     window.updateSettingsUI = () => {
         document.getElementById('setUName').innerText = userData.u;
         document.getElementById('setUserRole').innerText = userData.role;
-        document.getElementById('setUserEmail').innerText = userData.e;
         document.getElementById('setUserDiscord').innerText = userData.discordId || "N/A";
     };
+
+    // --- التعميمات ---
+    window.sendAnnouncement = async () => {
+        const t = document.getElementById('annText').value;
+        if(!t) return;
+        await setDoc(doc(db, "system_notices", "current"), { text: t, createdAt: Date.now() });
+        showAlert("تم", "تم نشر التعميم");
+    };
+
+    window.deleteAnnouncement = async () => { await deleteDoc(doc(db, "system_notices", "current")); };
+
+    function listenToAnnouncements() {
+        onSnapshot(doc(db, "system_notices", "current"), (s) => {
+            const b = document.getElementById('globalNotice');
+            if(s.exists()) { document.getElementById('noticeText').innerText = s.data().text; b.style.display = 'block'; }
+            else b.style.display = 'none';
+        });
+    }
 </script>
 </body>
 </html>
