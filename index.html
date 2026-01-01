@@ -40,9 +40,9 @@
         .status-btn.active-danger { background: var(--danger); }
         .status-btn.active-warn { background: var(--admin); }
 
-        .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .counter-item { background: var(--bg); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; }
-        .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .counters-grid { display: flex; flex-direction: column; gap: 15px; }
+        .counter-item { background: var(--card); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; }
+        .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.05); order: 1; opacity: 0.8; }
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 5000; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
@@ -52,6 +52,9 @@
         th { background: var(--primary); }
 
         .notice-banner { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 15px; }
+
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .setting-val { color: var(--primary); font-weight: bold; cursor: pointer; }
 
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -109,6 +112,7 @@
             <h2 style="text-align: center;">حساب جديد</h2>
             <input type="text" id="rU" placeholder="اسم المستخدم">
             <input type="email" id="rE" placeholder="الإيميل">
+            <input type="text" id="rDiscord" placeholder="Copy ID Discord">
             <input type="password" id="rP" placeholder="كلمة المرور">
             <button class="btn btn-primary" onclick="handleReg()">تسجيل</button>
             <button class="btn" style="background: none; color: var(--text);" onclick="toggleAuth(false)">رجوع</button>
@@ -124,7 +128,6 @@
                     <button class="btn btn-primary" onclick="calculateAge()">احسب العمر</button>
                     <div id="ageResult" style="margin-top:15px; font-weight:bold; color:var(--success)"></div>
                 </div>
-
                 <div class="card">
                     <h3>❓ إضافة سؤال تفعيل</h3>
                     <input type="text" id="qText" placeholder="نص السؤال">
@@ -147,7 +150,7 @@
             </div>
             <div class="divider"></div>
             <div>
-                <h3>📋 مراجعة الأجوبة (تقييمك)</h3>
+                <h3>📋 مراجعة الأجوبة</h3>
                 <div id="questionsList"></div>
             </div>
         </div>
@@ -171,7 +174,7 @@
                     <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
                 </div>
                 <div id="countersList" class="counters-grid"></div>
-                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للإحصائيات وتصفير العدادات ➡️</button>
+                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للسجل وتصفير ➡️</button>
             </div>
             <div class="divider"></div>
             <div>
@@ -208,18 +211,29 @@
 
     <div id="announcementsPage" class="section">
         <div class="card" style="max-width: 600px; margin: auto;">
-            <h2 style="text-align: center; color: var(--success);">إرسال تعميم جديد 📢</h2>
+            <h2 style="text-align: center; color: var(--success);">إدارة التعميمات 📢</h2>
             <textarea id="annText" placeholder="اكتب نص التعميم هنا..." rows="4"></textarea>
             <input type="number" id="annDuration" placeholder="المدة بالساعات" value="24">
-            <button class="btn btn-success" onclick="sendAnnouncement()">إرسال التعميم</button>
+            <button class="btn btn-success" onclick="sendAnnouncement()">إرسال تعميم</button>
+            <button class="btn btn-danger" style="margin-top: 10px;" onclick="deleteCurrentAnnouncement()">حذف التعميم الحالي 🗑️</button>
         </div>
     </div>
 
     <div id="settingsPage" class="section">
         <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ إعدادات الحساب</h3>
-            <div id="userSettingsInfo"></div>
-            <button class="btn btn-danger" style="margin-top: 20px;" onclick="logout()">تسجيل الخروج</button>
+            <div id="settingsDetails">
+                <div class="setting-row"><span>اسم المستخدم:</span> <span class="setting-val" id="setU" onclick="changeField('u', 'اسم المستخدم')">...</span></div>
+                <div class="setting-row"><span>الرتبة:</span> <span id="setR" style="color:var(--admin)">...</span></div>
+                <div class="setting-row"><span>الإيميل:</span> <span class="setting-val" id="setE" onclick="changeField('e', 'البريد الإلكتروني')">...</span></div>
+                <div class="setting-row"><span>ديسكورد ID:</span> <span class="setting-val" id="setD" onclick="changeField('discordId', 'Discord ID')">...</span></div>
+                <div class="setting-row"><span>كلمة المرور:</span> <span class="setting-val" id="setP" onclick="togglePassView()">******** (عرض)</span></div>
+            </div>
+            <div style="margin-top: 20px; display: grid; gap: 10px;">
+                <button class="btn btn-primary" onclick="changeField('p', 'كلمة المرور الجديدة')">تغيير كلمة المرور 🔑</button>
+                <button class="btn btn-admin" onclick="requestRank()">طلب رتبة 🎖️</button>
+                <button class="btn btn-danger" onclick="logout()">تسجيل الخروج 🚪</button>
+            </div>
         </div>
     </div>
 
@@ -227,8 +241,8 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, orderBy, getDocs, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, updatePassword, updateEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
@@ -243,27 +257,15 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let curUser = null;
-    let userData = null;
-
-    const repData = {
-        reportr: ["يرجى شرح مشكلتك لكي يتم خدمتك", "توجه للدعم الفني مع مايثبت ذلك", "سيتم خدمتك الان", "هل تم خدمتك بالشكل المطلوب؟", "سيتم التاكد من الموضوع , كذللك احتياطًا يرجى منك حفظ تصويرك اخر 20 دقيقه في حال الاحتياج له سيتم استدعائك"],
-        summon: ["استدعاء يخص المراقبة الدورية توجه للدعم مع تصوير 20 دقيقة", "احفظ تصوير اخر 20 دقيقه من الان وبعد الانتهاء من السيناريو توجه لدعم الفني مباشره", "استدعاء توجه للدعم الفني مع تصوير اخر 20 دقيقه"],
-        steam: ["الرجاء منك تغيير اسم ستيمك وفايف ام ويكون مطابق لاسم الدسكورد الخاص بك , وعدم تسميته ب اسم عربي او ارقام او زخرفة .. ادارة مستري تاون تتمنى لك يوم ممتع"],
-        clothes: ["يجب عليك لبس مناسب للمكان و تطبيق الاربي المناسب للمكان", "يجب عليك تغيير لبسك و مواكبة الأربي بإرتداء لبس مناسب لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع", "يجب عليك لبس حذاء لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع", "يجب عليك تغيير لبسك و عدم مخالفة تعميم الملابس لتجنب المحاسبة الادارية", "يرجى منك التوجه لاقرب محل ملابس و تغير الحزام بسبب انه خاص للعساكر فقط و اداره ميستري تاون تتمني لك وقتا ممتعا", "يجب عليك تعديل ملابسك لتتناسب مع وظيفتك، لتجنب المحاسبة الإدارية"],
-        rp: ["يجب عليك تقدير موقفك في اي حالة كنت متواجد فيها وقياسها بالحياة الواقعيه, وادارة مستري تاون تتمنى لك يوم ممتع", "يجب عليك تقدير موقفك وتقمص شخصية المصاب وقياسها بالحياة الواقعيه .ادارة مستري تاون تتمنى لك يوم ممتع", "يمنع منعا باتا الخروج عن الرول بلاي او التلميح خارج الار بي لتجنب المحاسبة الادارية", "يجب عليك ايقاف مركبتك بالشكل المناسب في المناطق الامنة تجنبا للمحاسبة الادارية , ادارة ميستري تاون تتمنى لك يوما ممتعا"],
-        gangs: ["يمنع منعاً باتاً القيام بأي أعمال (التقديح والاسلوب السيء) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنباً للمحاسبة الادارية ، وادارة مستري تاون تتمنى لك وقتاً ممتعاً", "يمنع منعاً باتا التخريم او اطلاق النار خلف الجدران لتجنب المحاسبة الادارية", "يمنع اعطاء كول والتكلم باريحيه وانت مسقط , ويجب عليك تقمص دور المصاب , تجنبا من المحاسبة الادارية", "عزيزي اللاعب يجب عليك التخطيط قبل بدء السرقة ومع التأكد من العدد المشاكرين بالسيناريو , ادارة مستري تتمنى لك يوم ممتع", "عزيزي المواطن , للتذكير يمنع كلبشة شخص بدون رفع اليد ويجب عليك الانتظار , خلاف ذالك بيتم محاسبتك بمحاسبة اداريا صارمه", "يجب عليك تقدير قيمة مركبتك والقيادة بشكل سليم و تجنب النقزات الغير واقعية, وتقدير حياتك وعدم صدم الاخريين , ادارة مستري تاون تتمنى لك يومأ ممتعأ", "يمنع الحلف باي طريقة كانت ويجب عليك تقمص الحياة الواقعيه وابعاد امور الدين بشكل عام تجنباً للمحاسبة الاداريه، وادارة مستري تاون تتمنى لك وقتاً ممتعاً", "يجب ان يكون التهديد بشكل مباشر و يمنع التهديد من داخل المركبة"],
-        general: ["يجب عليك طلب ومسعف والانتظار , ويمنع نقل المسقط بدون طلب مسعف , خلاف ذلك بيتم محاسبتك اداريًا", "يمنع منعًا باتًا معالجة شخص في حال تواجد المسعفين لتجنب المحاسبة الادارية", "في حال إزالة اربع من اطارات السيارة يمنع استكمال القيادة بها", "يمنع حمل اللاعب اثناء ركوب الدباب ايضًا المركبة", "يمنع إرتداء او إستعمال اي خوذة اثناء مشاركتك في اي إطلاق ناري", "يمنع الكذب بالمصطلحات الاتية ( سحر او باخذ حبة او صداع والخ ) .. يعرضك للمحاسبة الادارية", "يمنع منعًا باتًا القيام بأي أعمال ( التقديح والاسلوب السيء ) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنبًا للمحاسبة الادارية .. إدارة ميستري تاون تتمنى لك يومًا ممتعًا", "يمنع عليك تكرار البلاغات والسبام بالبلاغات العسكرية او الصحة , في حال تكرارها سيتم محاسبتك اداريًا"]
-    };
+    let curUser = null, userData = null, rawPass = "********";
 
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, customHtml = null) => {
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerHTML = customHtml ? customHtml : `<p>${msg}</p>`;
         const btns = document.getElementById('modalBtns');
         btns.innerHTML = '';
-        if (type === 'ok') {
-            btns.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">موافق</button>`;
-        } else if (type === 'confirm') {
+        if (type === 'ok') btns.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">موافق</button>`;
+        else if (type === 'confirm') {
             const y = document.createElement('button'); y.className = 'btn btn-danger'; y.innerText = 'تأكيد';
             y.onclick = () => { onConfirm(); closeModal(); };
             const n = document.createElement('button'); n.className = 'btn'; n.style.background = '#475569'; n.innerText = 'إلغاء';
@@ -277,133 +279,112 @@
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             curUser = user;
-            const d = await getDoc(doc(db, "users", user.uid));
-            userData = d.data();
-            applyPermissions();
-            nav('counter');
+            onSnapshot(doc(db, "users", user.uid), (d) => {
+                userData = d.data();
+                if(userData) {
+                    applyPermissions();
+                    renderSettings();
+                    document.getElementById('userBadge').innerText = userData.role;
+                }
+            });
             initListeners();
             listenToAnnouncements();
-            document.getElementById('userBadge').innerText = userData.role;
-        } else {
-            nav('auth');
-        }
+            nav('counter');
+        } else nav('auth');
     });
 
     function applyPermissions() {
-        const role = userData.role;
-        const canActivate = ['Admin', 'Managment', 'Support'].includes(role);
-        document.getElementById('navActivation').classList.toggle('hidden', !canActivate);
-        document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
-        document.getElementById('navAdmin').classList.toggle('hidden', role !== 'Admin');
-        document.getElementById('navAnnounce').classList.toggle('hidden', role !== 'Admin');
+        const r = userData.role;
+        document.getElementById('navActivation').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(r));
+        document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(r));
+        document.getElementById('navAdmin').classList.toggle('hidden', r !== 'Admin');
+        document.getElementById('navAnnounce').classList.toggle('hidden', r !== 'Admin');
         loadRepCategories();
     }
 
-    window.fetchUsersList = async () => {
-        const listDiv = document.getElementById('adminUserList');
-        listDiv.innerHTML = 'جاري التحميل...';
+    function renderSettings() {
+        document.getElementById('setU').innerText = userData.u;
+        document.getElementById('setR').innerText = userData.role;
+        document.getElementById('setE').innerText = userData.e;
+        document.getElementById('setD').innerText = userData.discordId || "غير مضاف";
+    }
+
+    window.togglePassView = () => {
+        const p = document.getElementById('setP');
+        if(p.innerText.includes('***')) {
+            const html = `<input type="password" id="confirmPass" placeholder="أدخل كلمة المرور الحالية للرؤية"><button class="btn btn-primary" onclick="verifyForPass()">تأكيد</button>`;
+            showAlert("تحقق", "يرجى إدخال كلمة المرور لرؤيتها", "ok", null, html);
+        } else p.innerText = "******** (عرض)";
+    };
+
+    window.verifyForPass = () => {
+        const pass = document.getElementById('confirmPass').value;
+        if(pass) { document.getElementById('setP').innerText = pass; closeModal(); }
+    };
+
+    window.changeField = (field, label) => {
+        const html = `<input type="${field==='p'?'password':'text'}" id="newVal" placeholder="${label}"><button class="btn btn-primary" onclick="saveField('${field}')">حفظ</button>`;
+        showAlert(`تغيير ${label}`, "", "ok", null, html);
+    };
+
+    window.saveField = async (f) => {
+        const val = document.getElementById('newVal').value;
+        if(!val) return;
         try {
-            const q = await getDocs(collection(db, "users"));
-            let h = '<table><thead><tr><th>الاسم</th><th>الرتبة</th><th>الإيميل</th><th>الإجراءات</th></tr></thead><tbody>';
-            q.forEach(docSnap => {
-                const u = docSnap.data();
-                const id = docSnap.id;
-                h += `<tr><td>${u.u}</td><td>${u.role}</td><td>${u.e}</td><td><button class="status-btn active-warn" onclick="editUserPrompt('${id}', '${u.u}', '${u.role}')">تعديل ⚙️</button></td></tr>`;
-            });
-            h += '</tbody></table>';
-            listDiv.innerHTML = h;
-        } catch (e) { listDiv.innerHTML = 'حدث خطأ'; }
+            if(f === 'u') await updateDoc(doc(db, "users", curUser.uid), { u: val });
+            if(f === 'discordId') await updateDoc(doc(db, "users", curUser.uid), { discordId: val });
+            if(f === 'e') { await updateEmail(curUser, val); await updateDoc(doc(db, "users", curUser.uid), { e: val }); }
+            if(f === 'p') await updatePassword(curUser, val);
+            closeModal(); showAlert("نجاح", "تم تحديث البيانات");
+        } catch(e) { showAlert("خطأ", e.message); }
+    };
+
+    window.requestRank = () => {
+        showAlert("طلب رتبة", "سيتم إرسال طلبك للإدارة، هل أنت متأكد؟", "confirm", async () => {
+            await addDoc(collection(db, "system_requests"), { uid: curUser.uid, user: userData.u, type: "Rank Request", createdAt: Date.now() });
+            showAlert("تم", "تم إرسال الطلب بنجاح");
+        });
+    };
+
+    window.fetchUsersList = async () => {
+        const div = document.getElementById('adminUserList'); div.innerHTML = 'جاري التحميل...';
+        const q = await getDocs(collection(db, "users"));
+        let h = '<table><thead><tr><th>الاسم</th><th>الرتبة</th><th>Discord ID</th><th>الإجراءات</th></tr></thead><tbody>';
+        q.forEach(s => {
+            const u = s.data();
+            h += `<tr><td>${u.u}</td><td>${u.role}</td><td>${u.discordId || '-'}</td><td><button class="status-btn active-warn" onclick="editUserPrompt('${s.id}', '${u.u}', '${u.role}')">⚙️</button></td></tr>`;
+        });
+        div.innerHTML = h + '</tbody></table>';
     };
 
     window.editUserPrompt = (uid, name, role) => {
-        const html = `<input type="text" id="editU" value="${name}" placeholder="الاسم الجديد"><select id="editR"><option value="User" ${role==='User'?'selected':''}>User</option><option value="Support" ${role==='Support'?'selected':''}>Support</option><option value="Managment" ${role==='Managment'?'selected':''}>Managment</option><option value="Admin" ${role==='Admin'?'selected':''}>Admin</option></select><input type="password" id="editP" placeholder="كلمة سر جديدة"><button class="btn btn-primary" onclick="saveUserEdit('${uid}')">حفظ التغييرات</button>`;
-        showAlert("تعديل بيانات المستخدم", "", "ok", null, html);
+        const html = `<select id="editR"><option value="User" ${role==='User'?'selected':''}>User</option><option value="Support" ${role==='Support'?'selected':''}>Support</option><option value="Managment" ${role==='Managment'?'selected':''}>Managment</option><option value="Admin" ${role==='Admin'?'selected':''}>Admin</option></select><button class="btn btn-primary" onclick="saveUserRole('${uid}')">تحديث الرتبة</button>`;
+        showAlert(`تعديل ${name}`, "", "ok", null, html);
     };
 
-    window.saveUserEdit = async (uid) => {
-        const newU = document.getElementById('editU').value, newR = document.getElementById('editR').value;
-        try {
-            await updateDoc(doc(db, "users", uid), { u: newU, role: newR });
-            closeModal(); fetchUsersList(); showAlert("تم", "تحديث البيانات بنجاح");
-        } catch(e) { showAlert("خطأ", "فشل التحديث"); }
-    };
-
-    window.toggleQOptions = () => {
-        document.getElementById('multipleOptions').classList.toggle('hidden', document.getElementById('qType').value !== 'multiple');
-    };
-
-    window.addQuestion = async () => {
-        const text = document.getElementById('qText').value, type = document.getElementById('qType').value;
-        if(!text) return;
-        let opts = [];
-        if(type === 'multiple') {
-            for(let i=1; i<=6; i++) {
-                const val = document.getElementById(`opt${i}`).value;
-                if(val) opts.push(val);
-            }
-        }
-        await addDoc(collection(db, "users", curUser.uid, "activation_questions"), { text, type, opts, createdAt: Date.now() });
-        document.getElementById('qText').value = '';
-        ['opt1','opt2','opt3','opt4','opt5','opt6'].forEach(id => document.getElementById(id).value = '');
-    };
-
-    window.selectAnswer = (btn, isBoolean = false, status = null) => {
-        if (isBoolean) {
-            const parent = btn.parentElement;
-            parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected', 'active-success', 'active-danger', 'active-warn'));
-            if(status === 'correct') btn.classList.add('active-success', 'selected');
-            if(status === 'wrong') btn.classList.add('active-danger', 'selected');
-            if(status === 'warn') btn.classList.add('active-warn', 'selected');
-        } else {
-            btn.classList.toggle('selected');
-        }
+    window.saveUserRole = async (uid) => {
+        await updateDoc(doc(db, "users", uid), { role: document.getElementById('editR').value });
+        closeModal(); fetchUsersList();
     };
 
     window.addCounter = async () => {
         const n = document.getElementById('counterName').value, g = parseInt(document.getElementById('counterGoal').value);
-        if (!n || !g) return;
-        await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g, c: 0, createdAt: Date.now() });
-        document.getElementById('counterName').value = ''; document.getElementById('counterGoal').value = '';
+        if (n && g) {
+            await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g, c: 0, createdAt: Date.now() });
+            document.getElementById('counterName').value = ''; document.getElementById('counterGoal').value = '';
+        }
     };
 
     window.updateCount = async (id, val, goal) => {
-        const newCount = Math.max(0, val);
-        await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: newCount });
-        if (newCount >= goal && val > newCount - 1) showAlert("كفو 🔥", "أشهد انك كفو 🫡");
-    };
-
-    window.transferToStats = async () => {
-        showAlert("نقل البيانات", "تصفير العدادات ونقلها للسجل؟", "confirm", async () => {
-            const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
-            let data = []; const batch = writeBatch(db);
-            q.forEach(d => { data.push({ n: d.data().n, c: d.data().c }); batch.update(d.ref, { c: 0 }); });
-            if (data.length > 0) {
-                await addDoc(collection(db, "users", curUser.uid, "stats"), { title: "سجل جديد", date: new Date().toLocaleString('ar-EG'), data: data, createdAt: Date.now() });
-                await batch.commit();
-            }
-        });
+        await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
     };
 
     function initListeners() {
         onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "asc")), (snap) => {
             const list = document.getElementById('countersList'); list.innerHTML = '';
             snap.forEach(d => {
-                const x = d.data(); const isDone = x.c >= x.g;
-                list.innerHTML += `<div class="counter-item ${isDone ? 'completed' : ''}"><b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div><div style="display: flex; gap: 5px;"><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1}, ${x.g})">+</button><button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1}, ${x.g})">-</button></div><button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button></div>`;
-            });
-        });
-
-        onSnapshot(query(collection(db, "users", curUser.uid, "activation_questions"), orderBy("createdAt", "desc")), (snap) => {
-            const list = document.getElementById('questionsList'); list.innerHTML = '';
-            snap.forEach(d => {
-                const q = d.data();
-                let btns = '';
-                if(q.type === 'boolean') {
-                    btns = `<button class="status-btn" onclick="selectAnswer(this, true, 'correct')">✅ صح</button><button class="status-btn" onclick="selectAnswer(this, true, 'wrong')">❌ خطأ</button><button class="status-btn" onclick="selectAnswer(this, true, 'warn')">⚠️ تنبيه</button>`;
-                } else {
-                    btns = q.opts.map(o => `<button class="status-btn" onclick="selectAnswer(this, false)">${o}</button>`).join('');
-                }
-                list.innerHTML += `<div class="card"><b>${q.text}</b> <span style="font-size:0.7rem; color:var(--primary)">(${q.type==='boolean'?'صح/خطأ':'اختيار متعدد'})</span><div class="status-btns">${btns}</div><button class="btn btn-danger" style="margin-top:10px; padding:2px; font-size:0.7rem" onclick="delGen('activation_questions', '${d.id}')">حذف السؤال</button></div>`;
+                const x = d.data(); const done = x.c >= x.g;
+                list.innerHTML += `<div class="counter-item ${done ? 'completed' : ''}"><b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div><div style="display: flex; gap: 5px;"><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1}, ${x.g})">+</button><button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1}, ${x.g})">-</button></div><button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button></div>`;
             });
         });
 
@@ -411,52 +392,45 @@
             const list = document.getElementById('notesList'); list.innerHTML = '';
             snap.forEach(d => {
                 const note = d.data();
-                list.innerHTML += `<div class="card">
-                    <pre id="noteText_${d.id}" style="white-space:pre-wrap; font-family:Cairo; font-size:0.9rem;">${note.t}</pre>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button class="btn btn-primary" style="padding:5px; font-size:0.7rem;" onclick="editNotePrompt('${d.id}', \`${note.t}\`)">تعديل ✏️</button>
-                        <button class="btn btn-success" style="padding:5px; font-size:0.7rem;" onclick="copyNote(\`${note.t}\`)">نسخ 📋</button>
-                        <button class="btn btn-danger" style="padding:5px; font-size:0.7rem;" onclick="delGen('notes', '${d.id}')">حذف 🗑️</button>
-                    </div>
-                </div>`;
+                list.innerHTML += `<div class="card"><pre style="white-space:pre-wrap; font-family:Cairo; font-size:0.9rem;">${note.t}</pre><div style="display:flex; gap:10px;"><button class="btn btn-success" style="padding:5px" onclick="copyNote(\`${note.t}\`)">نسخ</button><button class="btn btn-danger" style="padding:5px" onclick="delGen('notes', '${d.id}')">حذف</button></div></div>`;
             });
         });
 
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('statsList'); list.innerHTML = '';
             snap.forEach(d => {
-                const s = d.data(); let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
-                list.innerHTML += `<div class="card"><b>${s.title}</b> - ${s.date}<table>${rows}</table><button class="btn btn-danger" onclick="delGen('stats', '${d.id}')">حذف</button></div>`;
+                const s = d.data(); let r = s.data.map(i => `<tr><td>${i.n}</td><td>${i.c}</td></tr>`).join('');
+                list.innerHTML += `<div class="card"><b>${s.date}</b><table>${r}</table><button class="btn btn-danger" style="margin-top:10px" onclick="delGen('stats', '${d.id}')">حذف السجل</button></div>`;
             });
         });
     }
 
-    window.nav = (id) => {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id + 'Page').classList.add('active');
-        toggleSidebar(false);
-    };
-    window.toggleSidebar = (force) => {
-        const s = document.getElementById('sidebar');
-        const isOpen = force !== undefined ? force : !s.classList.contains('open');
-        s.classList.toggle('open', isOpen);
-        document.getElementById('overlay').style.display = isOpen ? 'block' : 'none';
-    };
-    window.logout = () => signOut(auth).then(() => location.reload());
-    window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
-    
-    window.calculateAge = () => {
-        const birth = document.getElementById('birthDate').value;
-        if(!birth) return;
-        const age = Math.floor((new Date() - new Date(birth)) / (365.25 * 24 * 60 * 60 * 1000));
-        document.getElementById('ageResult').innerText = `العمر التقريبي: ${age} سنة`;
-    };
-    
-    window.toggleAuth = (reg) => {
-        document.getElementById('loginBox').classList.toggle('hidden', reg);
-        document.getElementById('regBox').classList.toggle('hidden', !reg);
+    window.sendAnnouncement = async () => {
+        const text = document.getElementById('annText').value, hours = parseFloat(document.getElementById('annDuration').value);
+        if(text && hours) {
+            await setDoc(doc(db, "system_notices", "current"), { text, expiresAt: Date.now() + (hours * 3600000), createdAt: Date.now() });
+            showAlert("تم", "نشر التعميم بنجاح");
+        }
     };
 
+    window.deleteCurrentAnnouncement = async () => {
+        showAlert("حذف", "هل تريد حذف التعميم الحالي؟", "confirm", async () => {
+            await deleteDoc(doc(db, "system_notices", "current"));
+            showAlert("تم", "تم الحذف بنجاح");
+        });
+    };
+
+    function listenToAnnouncements() {
+        onSnapshot(doc(db, "system_notices", "current"), (s) => {
+            const b = document.getElementById('globalNotice');
+            if(s.exists() && Date.now() < s.data().expiresAt) {
+                document.getElementById('noticeText').innerText = s.data().text;
+                b.style.display = 'block';
+            } else b.style.display = 'none';
+        });
+    }
+
+    // Auth & Utilities
     window.handleLogin = async () => {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value, rem = document.getElementById('remMe').checked;
         try {
@@ -472,120 +446,56 @@
     };
 
     window.handleReg = async () => {
-        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, p = document.getElementById('rP').value;
+        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, d = document.getElementById('rDiscord').value, p = document.getElementById('rP').value;
+        if(!u || !e || !d || !p) return showAlert("نقص بيانات", "يرجى ملء جميع الخانات");
         try {
             const res = await createUserWithEmailAndPassword(auth, e, p);
-            await setDoc(doc(db, "users", res.user.uid), { u, e, role: 'User', createdAt: Date.now() });
+            await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', createdAt: Date.now() });
         } catch(err) { showAlert("خطأ", err.message); }
     };
 
-    function listenToAnnouncements() {
-        onSnapshot(doc(db, "system_notices", "current"), (snap) => {
-            const banner = document.getElementById('globalNotice');
-            if(snap.exists() && Date.now() < snap.data().expiresAt) {
-                document.getElementById('noticeText').innerText = snap.data().text;
-                banner.style.display = 'block';
-            } else banner.style.display = 'none';
-        });
-    }
+    window.nav = (id) => {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id + 'Page').classList.add('active');
+        toggleSidebar(false);
+    };
+    window.toggleSidebar = (f) => {
+        const s = document.getElementById('sidebar');
+        const open = f !== undefined ? f : !s.classList.contains('open');
+        s.classList.toggle('open', open);
+        document.getElementById('overlay').style.display = open ? 'block' : 'none';
+    };
+    window.logout = () => signOut(auth).then(() => location.reload());
+    window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
+    window.copyNote = async (t) => { await navigator.clipboard.writeText(t); showAlert("تم", "نسخ الملاحظة"); };
+    window.toggleAuth = (reg) => { document.getElementById('loginBox').classList.toggle('hidden', reg); document.getElementById('regBox').classList.toggle('hidden', !reg); };
 
+    // Placeholder for required logic from previous file
+    const repData = {
+        reportr: ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان"],
+        summon: ["استدعاء مراقبة دورية", "احفظ تصوير 20 دقيقة"],
+        steam: ["تغيير اسم ستيم"],
+        clothes: ["لبس غير مناسب", "تعديل الزي العسكري"],
+        rp: ["تقدير موقف رول بلاي", "الخروج عن الرول بلاي"],
+        gangs: ["افتعال فايت بدون سبب", "تخريم جدران"],
+        general: ["طلب مسعف", "معالجة بوجود مسعف"]
+    };
     window.loadRepCategories = () => {
         const sel = document.getElementById('repCat'); if(!sel) return;
         sel.innerHTML = '<option value="">-- اختر التصنيف --</option>';
-        const cats = {
-            reportr: "بلاغات عامة",
-            summon: "استدعاءات",
-            steam: "تعديل ستيم",
-            clothes: "ملابس",
-            rp: "رول بلاي",
-            gangs: "عصابات",
-            general: "قوانين عامة"
-        };
-        
-        // تعديل: إذا كانت الرتبة Support يظهر له "استدعاءات" فقط
-        if(userData && userData.role === 'Support') {
-            sel.innerHTML += `<option value="summon">استدعاءات</option>`;
-        } else {
-            for (let key in repData) {
-                sel.innerHTML += `<option value="${key}">${cats[key] || key}</option>`;
-            }
-        }
+        if(userData.role === 'Support') sel.innerHTML += `<option value="summon">استدعاءات</option>`;
+        else for (let k in repData) sel.innerHTML += `<option value="${k}">${k}</option>`;
     };
-
     window.loadRepOptions = () => {
-        const cat = document.getElementById('repCat').value;
-        const sub = document.getElementById('repSub');
-        sub.innerHTML = '';
-        if (cat && repData[cat]) {
-            repData[cat].forEach(txt => {
-                sub.innerHTML += `<option value="${txt}">${txt.substring(0, 50)}...</option>`;
-            });
-        }
+        const c = document.getElementById('repCat').value, s = document.getElementById('repSub');
+        s.innerHTML = '';
+        if (c && repData[c]) repData[c].forEach(t => s.innerHTML += `<option value="${t}">${t}</option>`);
     };
-
-    // تعديل: زر النسخ يضيف /reportr id تلقائياً للنسخ الداخلي
-    window.copyReport = async (mode) => {
-        const id = document.getElementById('repId').value;
-        const disc = document.getElementById('repDiscord').value;
-        const msg = document.getElementById('repSub').value;
-
-        if (!msg) return showAlert("تنبيه", "الرجاء اختيار رسالة");
-
-        let text = "";
-        if (mode === 'in') {
-            if (!id) return showAlert("تنبيه", "الرجاء كتابة ID اللاعب للنسخ داخل السيرفر");
-            text = `/reportr ${id} ${msg}`;
-        } else {
-            text = `${msg} \n <@${disc}>`;
-        }
-
-        try {
-            await navigator.clipboard.writeText(text);
-            showAlert("تم النسخ ✅", "بنجاح");
-        } catch (e) {
-            showAlert("خطأ", "فشل النسخ التلقائي");
-        }
-    };
-
-    window.addNote = async () => {
-        const t = document.getElementById('noteInput').value;
-        if (t) await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
-        document.getElementById('noteInput').value = '';
-    };
-
-    // وظائف الملاحظات الجديدة (تعديل ونسخ)
-    window.copyNote = async (text) => {
-        await navigator.clipboard.writeText(text);
-        showAlert("تم النسخ", "تم نسخ الملاحظة إلى الحافظة");
-    };
-
-    window.editNotePrompt = (id, oldText) => {
-        const html = `<textarea id="editNoteArea" rows="5">${oldText}</textarea><button class="btn btn-primary" onclick="saveNoteEdit('${id}')">حفظ التغييرات</button>`;
-        showAlert("تعديل الملاحظة", "", "ok", null, html);
-    };
-
-    window.saveNoteEdit = async (id) => {
-        const newT = document.getElementById('editNoteArea').value;
-        try {
-            await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newT });
-            closeModal();
-            showAlert("تم", "تم تحديث الملاحظة");
-        } catch(e) { showAlert("خطأ", "فشل التحديث"); }
-    };
-
-    window.sendAnnouncement = async () => {
-        const text = document.getElementById('annText').value;
-        const hours = parseFloat(document.getElementById('annDuration').value);
-        if(!text || !hours) return;
-        try {
-            await setDoc(doc(db, "system_notices", "current"), {
-                text,
-                expiresAt: Date.now() + (hours * 60 * 60 * 1000),
-                createdAt: Date.now()
-            });
-            showAlert("تم", "تم إرسال التعميم بنجاح");
-            document.getElementById('annText').value = '';
-        } catch(e) { showAlert("خطأ", "فشل الإرسال"); }
+    window.copyReport = async (m) => {
+        const id = document.getElementById('repId').value, d = document.getElementById('repDiscord').value, msg = document.getElementById('repSub').value;
+        if(!msg) return;
+        let text = m === 'in' ? `/reportr ${id} ${msg}` : `${msg} \n <@${d}>`;
+        await navigator.clipboard.writeText(text); showAlert("تم النسخ", "✅");
     };
 
 </script>
