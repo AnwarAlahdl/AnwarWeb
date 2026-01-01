@@ -33,16 +33,9 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-admin { background: var(--admin); color: white; }
 
-        .status-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-        .status-btn { flex: 1; min-width: 80px; padding: 8px; border-radius: 5px; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: white; font-size: 0.8rem; }
-        .status-btn.selected { background: var(--primary) !important; border-color: white; }
-        .status-btn.active-success { background: var(--success); }
-        .status-btn.active-danger { background: var(--danger); }
-        .status-btn.active-warn { background: var(--admin); }
-
         .counters-grid { display: flex; flex-direction: column; gap: 15px; }
-        .counter-item { background: var(--card); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; }
-        .counter-item.completed { border-color: var(--success); background: rgba(16, 185, 129, 0.05); order: 1; opacity: 0.8; }
+        .counter-item { background: var(--bg); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; order: 0; }
+        .counter-item.completed { border-color: var(--success); opacity: 0.6; order: 1; }
 
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 5000; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
@@ -53,8 +46,10 @@
 
         .notice-banner { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 15px; }
 
-        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-        .setting-val { color: var(--primary); font-weight: bold; cursor: pointer; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
+        .info-label { font-size: 0.85rem; color: #94a3b8; }
+        .info-value { font-weight: bold; color: var(--text); }
+        .pass-hide { cursor: pointer; user-select: none; }
 
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -131,20 +126,6 @@
                 <div class="card">
                     <h3>❓ إضافة سؤال تفعيل</h3>
                     <input type="text" id="qText" placeholder="نص السؤال">
-                    <select id="qType" onchange="toggleQOptions()">
-                        <option value="boolean">صح / خطأ</option>
-                        <option value="multiple">خيارات متعددة</option>
-                    </select>
-                    <div id="multipleOptions" class="hidden">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                            <input type="text" id="opt1" placeholder="خيار 1">
-                            <input type="text" id="opt2" placeholder="خيار 2">
-                            <input type="text" id="opt3" placeholder="خيار 3">
-                            <input type="text" id="opt4" placeholder="خيار 4">
-                            <input type="text" id="opt5" placeholder="خيار 5">
-                            <input type="text" id="opt6" placeholder="خيار 6">
-                        </div>
-                    </div>
                     <button class="btn btn-success" onclick="addQuestion()">إضافة السؤال</button>
                 </div>
             </div>
@@ -174,7 +155,7 @@
                     <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
                 </div>
                 <div id="countersList" class="counters-grid"></div>
-                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للسجل وتصفير ➡️</button>
+                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للإحصائيات وتصفير العدادات ➡️</button>
             </div>
             <div class="divider"></div>
             <div>
@@ -211,29 +192,47 @@
 
     <div id="announcementsPage" class="section">
         <div class="card" style="max-width: 600px; margin: auto;">
-            <h2 style="text-align: center; color: var(--success);">إدارة التعميمات 📢</h2>
+            <h2 style="text-align: center; color: var(--success);">إرسال تعميم جديد 📢</h2>
             <textarea id="annText" placeholder="اكتب نص التعميم هنا..." rows="4"></textarea>
             <input type="number" id="annDuration" placeholder="المدة بالساعات" value="24">
-            <button class="btn btn-success" onclick="sendAnnouncement()">إرسال تعميم</button>
-            <button class="btn btn-danger" style="margin-top: 10px;" onclick="deleteCurrentAnnouncement()">حذف التعميم الحالي 🗑️</button>
+            <button class="btn btn-success" onclick="sendAnnouncement()">إرسال التعميم</button>
+            <button class="btn btn-danger" style="margin-top:10px" onclick="deleteAnnouncement()">حذف التعميم الحالي 🗑️</button>
         </div>
     </div>
 
     <div id="settingsPage" class="section">
         <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ إعدادات الحساب</h3>
-            <div id="settingsDetails">
-                <div class="setting-row"><span>اسم المستخدم:</span> <span class="setting-val" id="setU" onclick="changeField('u', 'اسم المستخدم')">...</span></div>
-                <div class="setting-row"><span>الرتبة:</span> <span id="setR" style="color:var(--admin)">...</span></div>
-                <div class="setting-row"><span>الإيميل:</span> <span class="setting-val" id="setE" onclick="changeField('e', 'البريد الإلكتروني')">...</span></div>
-                <div class="setting-row"><span>ديسكورد ID:</span> <span class="setting-val" id="setD" onclick="changeField('discordId', 'Discord ID')">...</span></div>
-                <div class="setting-row"><span>كلمة المرور:</span> <span class="setting-val" id="setP" onclick="togglePassView()">******** (عرض)</span></div>
+            <div id="userDetailsBox">
+                <div class="info-row">
+                    <span class="info-label">اسم المستخدم</span>
+                    <span class="info-value" id="setUName"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الرتبة</span>
+                    <span class="info-value" id="setUserRole" style="color:var(--admin)"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الإيميل</span>
+                    <span class="info-value" id="setUserEmail"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ديسكورد ID</span>
+                    <span class="info-value" id="setUserDiscord"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">كلمة المرور</span>
+                    <span class="info-value pass-hide" id="setUserPass" onclick="togglePassDisplay()">********</span>
+                </div>
             </div>
-            <div style="margin-top: 20px; display: grid; gap: 10px;">
-                <button class="btn btn-primary" onclick="changeField('p', 'كلمة المرور الجديدة')">تغيير كلمة المرور 🔑</button>
-                <button class="btn btn-admin" onclick="requestRank()">طلب رتبة 🎖️</button>
-                <button class="btn btn-danger" onclick="logout()">تسجيل الخروج 🚪</button>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="promptUpdate('u')">تغيير اليوزر</button>
+                <button class="btn btn-primary" onclick="promptUpdate('e')">تغيير الإيميل</button>
+                <button class="btn btn-primary" onclick="promptUpdate('p')">تغيير الباسوورد</button>
+                <button class="btn btn-admin" onclick="requestRank()">طلب رتبة</button>
             </div>
+            <button class="btn btn-danger" style="margin-top: 20px;" onclick="logout()">تسجيل الخروج</button>
         </div>
     </div>
 
@@ -257,15 +256,19 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let curUser = null, userData = null, rawPass = "********";
+    let curUser = null;
+    let userData = null;
+    let showPass = false;
+    let cachedPass = "";
 
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, customHtml = null) => {
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerHTML = customHtml ? customHtml : `<p>${msg}</p>`;
         const btns = document.getElementById('modalBtns');
         btns.innerHTML = '';
-        if (type === 'ok') btns.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">موافق</button>`;
-        else if (type === 'confirm') {
+        if (type === 'ok') {
+            btns.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">موافق</button>`;
+        } else if (type === 'confirm') {
             const y = document.createElement('button'); y.className = 'btn btn-danger'; y.innerText = 'تأكيد';
             y.onclick = () => { onConfirm(); closeModal(); };
             const n = document.createElement('button'); n.className = 'btn'; n.style.background = '#475569'; n.innerText = 'إلغاء';
@@ -279,91 +282,103 @@
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             curUser = user;
-            onSnapshot(doc(db, "users", user.uid), (d) => {
-                userData = d.data();
-                if(userData) {
-                    applyPermissions();
-                    renderSettings();
-                    document.getElementById('userBadge').innerText = userData.role;
-                }
-            });
+            const d = await getDoc(doc(db, "users", user.uid));
+            userData = d.data();
+            applyPermissions();
+            updateSettingsUI();
+            nav('counter');
             initListeners();
             listenToAnnouncements();
-            nav('counter');
-        } else nav('auth');
+            document.getElementById('userBadge').innerText = userData.role;
+        } else {
+            nav('auth');
+        }
     });
 
-    function applyPermissions() {
-        const r = userData.role;
-        document.getElementById('navActivation').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(r));
-        document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(r));
-        document.getElementById('navAdmin').classList.toggle('hidden', r !== 'Admin');
-        document.getElementById('navAnnounce').classList.toggle('hidden', r !== 'Admin');
-        loadRepCategories();
+    function updateSettingsUI() {
+        if(!userData) return;
+        document.getElementById('setUName').innerText = userData.u;
+        document.getElementById('setUserRole').innerText = userData.role;
+        document.getElementById('setUserEmail').innerText = userData.e;
+        document.getElementById('setUserDiscord').innerText = userData.discordId || "غير متوفر";
     }
 
-    function renderSettings() {
-        document.getElementById('setU').innerText = userData.u;
-        document.getElementById('setR').innerText = userData.role;
-        document.getElementById('setE').innerText = userData.e;
-        document.getElementById('setD').innerText = userData.discordId || "غير مضاف";
-    }
-
-    window.togglePassView = () => {
-        const p = document.getElementById('setP');
-        if(p.innerText.includes('***')) {
-            const html = `<input type="password" id="confirmPass" placeholder="أدخل كلمة المرور الحالية للرؤية"><button class="btn btn-primary" onclick="verifyForPass()">تأكيد</button>`;
-            showAlert("تحقق", "يرجى إدخال كلمة المرور لرؤيتها", "ok", null, html);
-        } else p.innerText = "******** (عرض)";
+    window.togglePassDisplay = () => {
+        const el = document.getElementById('setUserPass');
+        if(!showPass) {
+            const html = `<input type="password" id="confirmP" placeholder="ادخل كلمة المرور للتأكد"><button class="btn btn-primary" onclick="verifyPassShow()">عرض</button>`;
+            showAlert("التحقق", "", "ok", null, html);
+        } else {
+            el.innerText = "********";
+            showPass = false;
+        }
     };
 
-    window.verifyForPass = () => {
-        const pass = document.getElementById('confirmPass').value;
-        if(pass) { document.getElementById('setP').innerText = pass; closeModal(); }
+    window.verifyPassShow = () => {
+        const p = document.getElementById('confirmP').value;
+        if(p) {
+            document.getElementById('setUserPass').innerText = p;
+            showPass = true;
+            closeModal();
+        }
     };
 
-    window.changeField = (field, label) => {
-        const html = `<input type="${field==='p'?'password':'text'}" id="newVal" placeholder="${label}"><button class="btn btn-primary" onclick="saveField('${field}')">حفظ</button>`;
-        showAlert(`تغيير ${label}`, "", "ok", null, html);
+    window.promptUpdate = (type) => {
+        let label = type === 'u' ? 'اليوزر الجديد' : type === 'e' ? 'الإيميل الجديد' : 'الباسوورد الجديد';
+        const html = `<input type="${type==='p'?'password':'text'}" id="newInp" placeholder="${label}"><button class="btn btn-primary" onclick="performUpdate('${type}')">تحديث</button>`;
+        showAlert("تحديث البيانات", "", "ok", null, html);
     };
 
-    window.saveField = async (f) => {
-        const val = document.getElementById('newVal').value;
+    window.performUpdate = async (type) => {
+        const val = document.getElementById('newInp').value;
         if(!val) return;
         try {
-            if(f === 'u') await updateDoc(doc(db, "users", curUser.uid), { u: val });
-            if(f === 'discordId') await updateDoc(doc(db, "users", curUser.uid), { discordId: val });
-            if(f === 'e') { await updateEmail(curUser, val); await updateDoc(doc(db, "users", curUser.uid), { e: val }); }
-            if(f === 'p') await updatePassword(curUser, val);
-            closeModal(); showAlert("نجاح", "تم تحديث البيانات");
+            if(type === 'u') await updateDoc(doc(db, "users", curUser.uid), { u: val });
+            if(type === 'e') {
+                await updateEmail(auth.currentUser, val);
+                await updateDoc(doc(db, "users", curUser.uid), { e: val });
+            }
+            if(type === 'p') await updatePassword(auth.currentUser, val);
+            location.reload();
         } catch(e) { showAlert("خطأ", e.message); }
     };
 
-    window.requestRank = () => {
-        showAlert("طلب رتبة", "سيتم إرسال طلبك للإدارة، هل أنت متأكد؟", "confirm", async () => {
-            await addDoc(collection(db, "system_requests"), { uid: curUser.uid, user: userData.u, type: "Rank Request", createdAt: Date.now() });
+    window.requestRank = async () => {
+        showAlert("طلب رتبة", "سيتم إرسال طلبك للإدارة، تأكيد؟", "confirm", async () => {
+            await addDoc(collection(db, "rank_requests"), { uid: curUser.uid, name: userData.u, currentRole: userData.role, createdAt: Date.now() });
             showAlert("تم", "تم إرسال الطلب بنجاح");
         });
     };
 
+    function applyPermissions() {
+        const role = userData.role;
+        document.getElementById('navActivation').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
+        document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
+        document.getElementById('navAdmin').classList.toggle('hidden', role !== 'Admin');
+        document.getElementById('navAnnounce').classList.toggle('hidden', role !== 'Admin');
+        loadRepCategories();
+    }
+
     window.fetchUsersList = async () => {
-        const div = document.getElementById('adminUserList'); div.innerHTML = 'جاري التحميل...';
+        const listDiv = document.getElementById('adminUserList');
+        listDiv.innerHTML = 'جاري التحميل...';
         const q = await getDocs(collection(db, "users"));
         let h = '<table><thead><tr><th>الاسم</th><th>الرتبة</th><th>Discord ID</th><th>الإجراءات</th></tr></thead><tbody>';
-        q.forEach(s => {
-            const u = s.data();
-            h += `<tr><td>${u.u}</td><td>${u.role}</td><td>${u.discordId || '-'}</td><td><button class="status-btn active-warn" onclick="editUserPrompt('${s.id}', '${u.u}', '${u.role}')">⚙️</button></td></tr>`;
+        q.forEach(docSnap => {
+            const u = docSnap.data();
+            h += `<tr><td>${u.u}</td><td>${u.role}</td><td>${u.discordId || '-'}</td><td><button class="status-btn active-warn" onclick="editUserRole('${docSnap.id}', '${u.u}')">تغيير الرتبة</button></td></tr>`;
         });
-        div.innerHTML = h + '</tbody></table>';
+        listDiv.innerHTML = h + '</tbody></table>';
     };
 
-    window.editUserPrompt = (uid, name, role) => {
-        const html = `<select id="editR"><option value="User" ${role==='User'?'selected':''}>User</option><option value="Support" ${role==='Support'?'selected':''}>Support</option><option value="Managment" ${role==='Managment'?'selected':''}>Managment</option><option value="Admin" ${role==='Admin'?'selected':''}>Admin</option></select><button class="btn btn-primary" onclick="saveUserRole('${uid}')">تحديث الرتبة</button>`;
-        showAlert(`تعديل ${name}`, "", "ok", null, html);
+    window.editUserRole = (uid, name) => {
+        const html = `<select id="newR"><option value="User">User</option><option value="Support">Support</option><option value="Managment">Managment</option><option value="Admin">Admin</option></select><button class="btn btn-primary" onclick="saveNewRole('${uid}')">حفظ</button>`;
+        showAlert(`تعديل رتبة ${name}`, "", "ok", null, html);
     };
 
-    window.saveUserRole = async (uid) => {
-        await updateDoc(doc(db, "users", uid), { role: document.getElementById('editR').value });
+    window.saveNewRole = async (uid) => {
+        const r = document.getElementById('newR').value;
+        await updateDoc(doc(db, "users", uid), { role: r });
         closeModal(); fetchUsersList();
     };
 
@@ -375,8 +390,20 @@
         }
     };
 
-    window.updateCount = async (id, val, goal) => {
+    window.updateCount = async (id, val) => {
         await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
+    };
+
+    window.transferToStats = async () => {
+        showAlert("تصفير العدادات", "هل تود نقل البيانات للسجل؟", "confirm", async () => {
+            const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
+            let data = []; const batch = writeBatch(db);
+            q.forEach(d => { data.push({ n: d.data().n, c: d.data().c }); batch.update(d.ref, { c: 0 }); });
+            if (data.length > 0) {
+                await addDoc(collection(db, "users", curUser.uid, "stats"), { title: "سجل جديد", date: new Date().toLocaleString('ar-EG'), data: data, createdAt: Date.now() });
+                await batch.commit();
+            }
+        });
     };
 
     function initListeners() {
@@ -384,7 +411,7 @@
             const list = document.getElementById('countersList'); list.innerHTML = '';
             snap.forEach(d => {
                 const x = d.data(); const done = x.c >= x.g;
-                list.innerHTML += `<div class="counter-item ${done ? 'completed' : ''}"><b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div><div style="display: flex; gap: 5px;"><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1}, ${x.g})">+</button><button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1}, ${x.g})">-</button></div><button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button></div>`;
+                list.innerHTML += `<div class="counter-item ${done ? 'completed' : ''}"><b>${x.n}</b><div style="font-size: 1.5rem; margin: 10px 0;">${x.c} / ${x.g}</div><div style="display: flex; gap: 5px;"><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1})">+</button><button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1})">-</button></div><button class="btn" style="background:none; color:var(--danger); font-size:0.7rem;" onclick="delGen('counters', '${d.id}')">حذف</button></div>`;
             });
         });
 
@@ -399,38 +426,66 @@
         onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
             const list = document.getElementById('statsList'); list.innerHTML = '';
             snap.forEach(d => {
-                const s = d.data(); let r = s.data.map(i => `<tr><td>${i.n}</td><td>${i.c}</td></tr>`).join('');
-                list.innerHTML += `<div class="card"><b>${s.date}</b><table>${r}</table><button class="btn btn-danger" style="margin-top:10px" onclick="delGen('stats', '${d.id}')">حذف السجل</button></div>`;
+                const s = d.data(); let rows = s.data.map(r => `<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join('');
+                list.innerHTML += `<div class="card"><b>${s.date}</b><table>${rows}</table><button class="btn btn-danger" onclick="delGen('stats', '${d.id}')">حذف السجل</button></div>`;
             });
         });
     }
 
-    window.sendAnnouncement = async () => {
-        const text = document.getElementById('annText').value, hours = parseFloat(document.getElementById('annDuration').value);
-        if(text && hours) {
-            await setDoc(doc(db, "system_notices", "current"), { text, expiresAt: Date.now() + (hours * 3600000), createdAt: Date.now() });
-            showAlert("تم", "نشر التعميم بنجاح");
-        }
+    const repData = {
+        reportr: ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان"],
+        summon: ["استدعاء مراقبة دورية", "احفظ تصوير 20 دقيقة"],
+        general: ["مخالفة قوانين عامة", "تنبيه إداري"]
     };
 
-    window.deleteCurrentAnnouncement = async () => {
-        showAlert("حذف", "هل تريد حذف التعميم الحالي؟", "confirm", async () => {
+    window.loadRepCategories = () => {
+        const sel = document.getElementById('repCat'); if(!sel) return;
+        sel.innerHTML = '<option value="">-- اختر التصنيف --</option>';
+        if(userData.role === 'Support') sel.innerHTML += `<option value="summon">استدعاءات</option>`;
+        else for (let k in repData) sel.innerHTML += `<option value="${k}">${k}</option>`;
+    };
+
+    window.loadRepOptions = () => {
+        const cat = document.getElementById('repCat').value;
+        const sub = document.getElementById('repSub');
+        sub.innerHTML = '';
+        if (cat && repData[cat]) repData[cat].forEach(t => sub.innerHTML += `<option value="${t}">${t}</option>`);
+    };
+
+    window.copyReport = async (mode) => {
+        const id = document.getElementById('repId').value;
+        const disc = document.getElementById('repDiscord').value;
+        const msg = document.getElementById('repSub').value;
+        if(!msg) return;
+        let text = mode === 'in' ? `/reportr ${id} ${msg}` : `${msg} \n <@${disc}>`;
+        await navigator.clipboard.writeText(text); showAlert("تم النسخ", "✅");
+    };
+
+    window.sendAnnouncement = async () => {
+        const text = document.getElementById('annText').value;
+        const hours = parseFloat(document.getElementById('annDuration').value);
+        if(!text || !hours) return;
+        await setDoc(doc(db, "system_notices", "current"), { text, expiresAt: Date.now() + (hours * 3600000), createdAt: Date.now() });
+        showAlert("تم", "نشر التعميم بنجاح");
+    };
+
+    window.deleteAnnouncement = async () => {
+        showAlert("حذف التعميم", "هل أنت متأكد من حذف التعميم الحالي؟", "confirm", async () => {
             await deleteDoc(doc(db, "system_notices", "current"));
-            showAlert("تم", "تم الحذف بنجاح");
+            showAlert("تم", "تم حذف التعميم بنجاح");
         });
     };
 
     function listenToAnnouncements() {
-        onSnapshot(doc(db, "system_notices", "current"), (s) => {
-            const b = document.getElementById('globalNotice');
-            if(s.exists() && Date.now() < s.data().expiresAt) {
-                document.getElementById('noticeText').innerText = s.data().text;
-                b.style.display = 'block';
-            } else b.style.display = 'none';
+        onSnapshot(doc(db, "system_notices", "current"), (snap) => {
+            const banner = document.getElementById('globalNotice');
+            if(snap.exists() && Date.now() < snap.data().expiresAt) {
+                document.getElementById('noticeText').innerText = snap.data().text;
+                banner.style.display = 'block';
+            } else banner.style.display = 'none';
         });
     }
 
-    // Auth & Utilities
     window.handleLogin = async () => {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value, rem = document.getElementById('remMe').checked;
         try {
@@ -447,7 +502,7 @@
 
     window.handleReg = async () => {
         const u = document.getElementById('rU').value, e = document.getElementById('rE').value, d = document.getElementById('rDiscord').value, p = document.getElementById('rP').value;
-        if(!u || !e || !d || !p) return showAlert("نقص بيانات", "يرجى ملء جميع الخانات");
+        if(!u || !e || !d || !p) return showAlert("تنبيه", "يرجى ملء كافة الخانات");
         try {
             const res = await createUserWithEmailAndPassword(auth, e, p);
             await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', createdAt: Date.now() });
@@ -467,36 +522,8 @@
     };
     window.logout = () => signOut(auth).then(() => location.reload());
     window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => { await deleteDoc(doc(db, "users", curUser.uid, col, id)); });
-    window.copyNote = async (t) => { await navigator.clipboard.writeText(t); showAlert("تم", "نسخ الملاحظة"); };
+    window.copyNote = async (t) => { await navigator.clipboard.writeText(t); showAlert("تم النسخ", "بنجاح"); };
     window.toggleAuth = (reg) => { document.getElementById('loginBox').classList.toggle('hidden', reg); document.getElementById('regBox').classList.toggle('hidden', !reg); };
-
-    // Placeholder for required logic from previous file
-    const repData = {
-        reportr: ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان"],
-        summon: ["استدعاء مراقبة دورية", "احفظ تصوير 20 دقيقة"],
-        steam: ["تغيير اسم ستيم"],
-        clothes: ["لبس غير مناسب", "تعديل الزي العسكري"],
-        rp: ["تقدير موقف رول بلاي", "الخروج عن الرول بلاي"],
-        gangs: ["افتعال فايت بدون سبب", "تخريم جدران"],
-        general: ["طلب مسعف", "معالجة بوجود مسعف"]
-    };
-    window.loadRepCategories = () => {
-        const sel = document.getElementById('repCat'); if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر التصنيف --</option>';
-        if(userData.role === 'Support') sel.innerHTML += `<option value="summon">استدعاءات</option>`;
-        else for (let k in repData) sel.innerHTML += `<option value="${k}">${k}</option>`;
-    };
-    window.loadRepOptions = () => {
-        const c = document.getElementById('repCat').value, s = document.getElementById('repSub');
-        s.innerHTML = '';
-        if (c && repData[c]) repData[c].forEach(t => s.innerHTML += `<option value="${t}">${t}</option>`);
-    };
-    window.copyReport = async (m) => {
-        const id = document.getElementById('repId').value, d = document.getElementById('repDiscord').value, msg = document.getElementById('repSub').value;
-        if(!msg) return;
-        let text = m === 'in' ? `/reportr ${id} ${msg}` : `${msg} \n <@${d}>`;
-        await navigator.clipboard.writeText(text); showAlert("تم النسخ", "✅");
-    };
 
 </script>
 </body>
