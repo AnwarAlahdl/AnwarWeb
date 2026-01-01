@@ -280,7 +280,7 @@
 
     let userData = null;
 
-    // --- Modern Alert/Confirm/Prompt System ---
+    // --- Modal System ---
     window.showModal = (title, body, type = 'ok', onConfirm = null) => {
         const m = document.getElementById('customModal');
         document.getElementById('mTitle').innerText = title;
@@ -292,7 +292,6 @@
 
         if(type === 'confirm' || type === 'prompt') {
             if(type === 'prompt') inputCont.classList.remove('hidden');
-            
             const b1 = document.createElement('button'); b1.className='btn btn-danger'; b1.innerText='تأكيد'; 
             b1.onclick=()=>{ 
                 const val = document.getElementById('mPromptInput').value;
@@ -325,7 +324,12 @@
         document.getElementById('overlay').style.display = open ? 'block' : 'none';
     };
 
-    // --- Auth ---
+    // --- Auth Logic ---
+    window.toggleAuth = (reg) => {
+        document.getElementById('loginBox').classList.toggle('hidden', reg);
+        document.getElementById('regBox').classList.toggle('hidden', !reg);
+    };
+
     window.handleLogin = async () => {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
         if(!u || !p) return showModal("تنبيه", "يرجى تعبئة الحقول");
@@ -348,10 +352,10 @@
         if(!u || !e || !d || !p) return showModal("خطأ", "كل الحقول مطلوبة");
         if(p !== p2) return showModal("خطأ", "كلمات المرور غير متطابقة");
         
-        const checkU = await getDocs(query(collection(db, "users"), where("u", "==", u)));
-        if(!checkU.empty) return showModal("خطأ", "اليوزر مستخدم بالفعل");
-
         try {
+            const checkU = await getDocs(query(collection(db, "users"), where("u", "==", u)));
+            if(!checkU.empty) return showModal("خطأ", "اليوزر مستخدم بالفعل");
+            
             const res = await createUserWithEmailAndPassword(auth, e, p);
             await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', requestedRank: false, createdAt: Date.now() });
         } catch(err) { showModal("خطأ", err.message); }
@@ -415,7 +419,7 @@
         await deleteDoc(doc(db, "users", auth.currentUser.uid, "stats", id));
     });
 
-    // --- Reports ---
+    // --- Reports System ---
     const reportsMap = {
         "reportr": ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان", "هل تم خدمتك؟", "حفظ تصوير آخر 20 دقيقة"],
         "summon": ["استدعاء مراقبة دورية - تصوير 20 دقيقة", "احفظ تصويرك وتوجه للدعم بعد السيناريو", "استدعاء دعم فني - تصوير 20 دقيقة"],
@@ -444,7 +448,7 @@
         navigator.clipboard.writeText(txt).then(()=>showModal("تم", "تم النسخ بنجاح"));
     };
 
-    // --- Activation Quiz (Private for each user) ---
+    // --- Private Quiz System ---
     window.openAddQuestionModal = () => {
         const html = `
             <input type="text" id="qTitle" placeholder="نص السؤال">
@@ -494,7 +498,7 @@
         res.style.color = age >= 16 ? "var(--success)" : "var(--danger)";
     };
 
-    // --- Admin Functions ---
+    // --- Admin Logic ---
     window.postNotice = async () => {
         const txt = document.getElementById('noticeInput').value, hrs = document.getElementById('noticeHours').value;
         if(!txt || !hrs) return showModal("تنبيه", "أدخل النص والمدة");
@@ -533,7 +537,7 @@
     };
     window.adminDelUser = (id) => showModal("تحذير", "حذف نهائي؟", "confirm", () => deleteDoc(doc(db, "users", id)).then(refreshAdminList));
 
-    // --- User Settings ---
+    // --- User Actions ---
     window.promptUpdate = (type) => {
         const lbl = type === 'username' ? "اليوزر الجديد" : "الباسورد الجديد";
         showModal(`تعديل ${lbl}`, "", "prompt", async (val) => {
@@ -548,7 +552,7 @@
         showModal("تم", "تم إرسال الطلب");
     });
 
-    // --- Auth State ---
+    // --- Auth State Change ---
     onAuthStateChanged(auth, async (user) => {
         if(user) {
             onSnapshot(doc(db, "users", user.uid), async (snap) => {
@@ -570,11 +574,13 @@
 
             onSnapshot(collection(db, "users", user.uid, "counters"), renderCounters);
             onSnapshot(query(collection(db, "users", user.uid, "private_quiz"), orderBy("createdAt", "desc")), renderQuiz);
+            
             onSnapshot(doc(db, "system_notices", "current"), (s) => {
                 const bar = document.getElementById('globalNoticeBar');
                 if(s.exists() && s.data().expiry > Date.now()) { bar.innerText = s.data().text; bar.style.display = 'block'; }
                 else bar.style.display = 'none';
             });
+
             onSnapshot(query(collection(db, "users", user.uid, "stats"), orderBy("timestamp", "desc")), (s) => {
                 const c = document.getElementById('statsContainer'); c.innerHTML = '';
                 s.forEach(doc => { 
