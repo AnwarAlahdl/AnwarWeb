@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ANWAR CLOUD</title>
+    <title>ANWAR CLOUD - الإصدار المطور</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --primary: #6366f1; --text: #f8fafc; --border: #334155; --success: #10b981; --danger: #ef4444; --admin: #f59e0b; }
@@ -27,20 +27,22 @@
         .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 20px; position: relative; }
         input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: #f1f5f9; color: #1e293b; font-family: 'Cairo'; box-sizing: border-box; font-weight: bold; }
         
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; display: inline-block; text-align: center; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-admin { background: var(--admin); color: white; }
 
-        .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 600px) { .counters-grid { grid-template-columns: 1fr; } }
+        .counters-grid { display: flex; flex-direction: column; gap: 15px; }
+        .counter-item { background: var(--bg); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; transition: 0.3s; }
+        .counter-item.completed { border-color: var(--success); opacity: 0.7; order: 2; } /* المكتمل ينزل تحت */
 
-        .counter-item { background: var(--bg); padding: 15px; border-radius: 12px; border: 2px solid var(--border); text-align: center; }
-        .counter-item.completed { border-color: var(--success); opacity: 0.6; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 5000; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 5000; }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; text-align: center; border: 1px solid var(--border); max-height: 80vh; overflow-y: auto; }
+        .q-option { background: var(--bg); padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin: 5px 0; cursor: pointer; transition: 0.2s; }
+        .q-option.selected { border-color: var(--primary); background: rgba(99, 102, 241, 0.2); }
+        .q-option.tf-selected { border-color: var(--success); background: rgba(16, 185, 129, 0.2); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
         th, td { padding: 10px; border: 1px solid var(--border); text-align: center; color: white; }
@@ -48,11 +50,7 @@
 
         .notice-banner { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; border-radius: 8px; margin-bottom: 15px; }
         .info-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
-        .info-label { font-size: 0.85rem; color: #94a3b8; }
-        .info-value { font-weight: bold; color: var(--text); }
-
-        .user-requested { background-color: rgba(239, 68, 68, 0.2) !important; color: var(--danger) !important; font-weight: 900 !important; }
-
+        
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -63,9 +61,9 @@
 
 <div class="modal" id="sysModal">
     <div class="modal-content">
-        <h3 id="modalTitle">تنبيه</h3>
-        <div id="modalBody"></div>
-        <div id="modalBtns" style="margin-top: 20px; display: flex; gap: 10px;"></div>
+        <h3 id="modalTitle" style="color: var(--primary);">تنبيه</h3>
+        <div id="modalBody" style="margin: 15px 0;"></div>
+        <div id="modalBtns" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;"></div>
     </div>
 </div>
 
@@ -110,7 +108,6 @@
                 <span onclick="toggleAuth(true)" style="color: var(--primary); cursor: pointer;">إنشاء حساب جديد</span>
             </div>
         </div>
-
         <div class="card hidden" id="regBox" style="max-width: 400px; margin: auto;">
             <h2 style="text-align: center;">حساب جديد</h2>
             <input type="text" id="rU" placeholder="اسم المستخدم (فريد)">
@@ -119,68 +116,6 @@
             <input type="password" id="rP" placeholder="كلمة المرور">
             <button class="btn btn-primary" onclick="handleReg()">تسجيل</button>
             <button class="btn" style="background: none; color: var(--text);" onclick="toggleAuth(false)">رجوع</button>
-        </div>
-    </div>
-
-    <div id="reportsPage" class="section">
-        <div class="card" style="max-width: 700px; margin: auto;">
-            <h2 style="text-align: center;">📢 نظام ريبورتات مستري تاون</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label>ID اللاعب:</label>
-                    <input type="text" id="repGameID" placeholder="مثال: 105">
-                </div>
-                <div>
-                    <label>Discord ID:</label>
-                    <input type="text" id="repDiscordID" placeholder="Copy ID Discord">
-                </div>
-            </div>
-            
-            <label>اختر قسم الريبورت:</label>
-            <select id="repCategory" onchange="updateSubReasons()">
-                <option value="">-- اختر القسم --</option>
-                <option value="reportr">Reportr</option>
-                <option value="summon">ريبورتات الاستدعاء</option>
-                <option value="steam">الريبورت الخاص بـ Steam</option>
-                <option value="clothes">ريبورتات الملابس</option>
-                <option value="rp">ريبورتات الـ RP</option>
-                <option value="crime">ريبورتات الإجرام والعصابات والعساكر</option>
-                <option value="general">ريبورتات عامة</option>
-            </select>
-
-            <label>اختر السبب المحدد:</label>
-            <select id="repReason"></select>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                <button class="btn btn-primary" onclick="copyFullReport('in')">نسخ ريبورت داخل السيرفر</button>
-                <button class="btn btn-success" onclick="copyFullReport('out')">نسخ ريبورت خارج السيرفر</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="activationPage" class="section">
-        <div class="main-layout">
-            <div>
-                <div class="card">
-                    <h3>🎂 حاسبة العمر</h3>
-                    <input type="date" id="birthDate">
-                    <button class="btn btn-primary" onclick="calculateAge()">احسب العمر</button>
-                    <div id="ageResult" style="margin-top:15px; font-weight:bold; color:var(--success)"></div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div>
-                <h3>📋 مراجعة الأجوبة</h3>
-                <div id="questionsList"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="adminPage" class="section">
-        <div class="card">
-            <h3 style="color: var(--admin);">👥 إدارة المستخدمين (الأحمر = طلب رتبة)</h3>
-            <button class="btn btn-admin" style="width: auto; padding: 5px 20px;" onclick="fetchUsersList()">تحديث القائمة 🔄</button>
-            <div id="adminUserList" style="margin-top: 20px; overflow-x: auto;"></div>
         </div>
     </div>
 
@@ -194,12 +129,73 @@
                     <button class="btn btn-primary" onclick="addCounter()">إضافة العداد</button>
                 </div>
                 <div id="countersList" class="counters-grid"></div>
-                <button class="btn btn-success" style="margin-top: 20px;" onclick="transferToStats()">نقل للإحصائيات ➡️</button>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="transferToStats()">نقل للإحصائيات ➡️</button>
+                    <button class="btn btn-danger" onclick="resetAllCounters()">تصفير الكل 🔄</button>
+                </div>
             </div>
             <div class="divider"></div>
             <div>
                 <h2 style="text-align: center;">📈 سجل الإحصائيات</h2>
                 <div id="statsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportsPage" class="section">
+        <div class="card" style="max-width: 700px; margin: auto;">
+            <h2 style="text-align: center;">📢 نظام الريبورتات</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="repGameID" placeholder="ID اللاعب">
+                <input type="text" id="repDiscordID" placeholder="Discord ID">
+            </div>
+            <select id="repCategory" onchange="updateSubReasons()">
+                <option value="">-- اختر القسم --</option>
+                <option value="reportr">Reportr</option>
+                <option value="summon">ريبورتات الاستدعاء</option>
+                <option value="steam">الريبورت الخاص بـ Steam</option>
+                <option value="clothes">ريبورتات الملابس</option>
+                <option value="rp">ريبورتات الـ RP</option>
+                <option value="crime">ريبورتات الإجرام</option>
+                <option value="general">ريبورتات عامة</option>
+            </select>
+            <select id="repReason"></select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-primary" onclick="copyFullReport('in')">نسخ داخلي</button>
+                <button class="btn btn-success" onclick="copyFullReport('out')">نسخ خارجي</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="activationPage" class="section">
+        <div class="main-layout">
+            <div>
+                <div class="card">
+                    <h3>🎂 حاسبة العمر</h3>
+                    <input type="date" id="birthDate">
+                    <button class="btn btn-primary" onclick="calculateAge()">احسب العمر</button>
+                    <div id="ageResult" style="margin-top:15px; font-weight:bold;"></div>
+                </div>
+                <div class="card">
+                    <h3>➕ إضافة أسئلة (للإدارة)</h3>
+                    <input type="text" id="qText" placeholder="نص السؤال">
+                    <select id="qType">
+                        <option value="mcq">إختيار من متعدد</option>
+                        <option value="tf">صح أو خطأ</option>
+                    </select>
+                    <div id="mcqOptions">
+                        <input type="text" class="opt-in" placeholder="خيار 1">
+                        <input type="text" class="opt-in" placeholder="خيار 2">
+                        <input type="text" class="opt-in" placeholder="خيار 3">
+                    </div>
+                    <button class="btn btn-admin" onclick="addQuestion()">إضافة السؤال</button>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div>
+                <h3>📋 نموذج التفعيل التفاعلي</h3>
+                <div id="questionsList"></div>
+                <button class="btn btn-success" style="margin-top: 15px;" onclick="submitActivation()">إرسال المراجعة</button>
             </div>
         </div>
     </div>
@@ -217,14 +213,25 @@
         <div class="card" style="max-width: 500px; margin: auto;">
             <h3>⚙️ إعدادات الحساب</h3>
             <div id="userDetailsBox">
-                <div class="info-row"><span class="info-label">اليوزر</span><span class="info-value" id="setUName"></span></div>
-                <div class="info-row"><span class="info-label">الرتبة</span><span class="info-value" id="setUserRole"></span></div>
-                <div class="info-row"><span class="info-label">الإيميل</span><span class="info-value" id="setUserEmail"></span></div>
-                <div class="info-row"><span class="info-label">ديسكورد ID</span><span class="info-value" id="setUserDiscord"></span></div>
+                <div class="info-row"><span class="info-label">اليوزر:</span><span class="info-value" id="setUName"></span></div>
+                <div class="info-row"><span class="info-label">الرتبة:</span><span class="info-value" id="setUserRole"></span></div>
+                <div class="info-row"><span class="info-label">الإيميل:</span><span class="info-value" id="setUserEmail"></span></div>
+                <div class="info-row"><span class="info-label">ديسكورد:</span><span class="info-value" id="setUserDiscord"></span></div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-admin" onclick="requestRank()">طلب رتبة 🎖️</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="promptUpdate('u')">تغيير اليوزر</button>
+                <button class="btn btn-primary" onclick="promptUpdate('e')">تغيير الإيميل</button>
+                <button class="btn btn-primary" onclick="promptUpdate('d')">تغيير الديسكورد</button>
+                <button class="btn btn-admin" id="rankBtn" onclick="requestRank()">طلب رتبة 🎖️</button>
             </div>
+        </div>
+    </div>
+
+    <div id="adminPage" class="section">
+        <div class="card">
+            <h3 style="color: var(--admin);">👥 إدارة المستخدمين</h3>
+            <button class="btn btn-admin" style="width: auto; padding: 5px 20px;" onclick="fetchUsersList()">تحديث القائمة 🔄</button>
+            <div id="adminUserList" style="margin-top: 20px; overflow-x: auto;"></div>
         </div>
     </div>
 
@@ -236,7 +243,6 @@
             <button class="btn btn-danger" style="margin-top:10px" onclick="deleteAnnouncement()">حذف التعميم الحالي 🗑️</button>
         </div>
     </div>
-
 </div>
 
 <script type="module">
@@ -259,68 +265,18 @@
 
     let curUser = null, userData = null;
 
-    // قاعدة بيانات الريبورتات
-    const reportData = {
-        "reportr": [
-            "يرجى شرح مشكلتك لكي يتم خدمتك",
-            "توجه للدعم الفني مع مايثبت ذلك",
-            "سيتم خدمتك الان",
-            "هل تم خدمتك بالشكل المطلوب؟",
-            "سيتم التاكد من الموضوع , كذللك احتياطًا يرجى منك حفظ تصويرك اخر 20 دقيقه في حال الاحتياج له سيتم استدعائك"
-        ],
-        "summon": [
-            "استدعاء يخص المراقبة الدورية توجه للدعم مع تصوير 20 دقيقة",
-            "احفظ تصوير اخر 20 دقيقه من الان وبعد الانتهاء من السيناريو توجه لدعم الفني مباشره",
-            "استدعاء توجه للدعم الفني مع تصوير اخر 20 دقيقه"
-        ],
-        "steam": [
-            "الرجاء منك تغيير اسم ستيمك وفايف ام ويكون مطابق لاسم الدسكورد الخاص بك , وعدم تسميته ب اسم عربي او ارقام او زخرفة .. ادارة مستري تاون تتمنى لك يوم ممتع"
-        ],
-        "clothes": [
-            "يجب عليك لبس مناسب للمكان و تطبيق الاربي المناسب للمكان",
-            "يجب عليك تغيير لبسك و مواكبة الأربي بإرتداء لبس مناسب لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع",
-            "يجب عليك لبس حذاء لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع",
-            "يجب عليك تغيير لبسك و عدم مخالفة تعميم الملابس لتجنب المحاسبة الادارية",
-            "يرجى منك التوجه لاقرب محل ملابس و تغير الحزام بسبب انه خاص للعساكر فقط و اداره ميستري تاون تتمني لك وقتا ممتعا",
-            "يجب عليك تعديل ملابسك لتتناسب مع وظيفتك، لتجنب المحاسبة الإدارية"
-        ],
-        "rp": [
-            "يجب عليك تقدير موقفك في اي حالة كنت متواجد فيها وقياسها بالحياة الواقعيه, وادارة مستري تاون تتمنى لك يوم ممتع",
-            "يجب عليك تقدير موقفك وتقمص شخصية المصاب وقياسها بالحياة الواقعيه .ادارة مستري تاون تتمنى لك يوم ممتع",
-            "يمنع منعا باتا الخروج عن الرول بلاي او التلميح خارج الار بي لتجنب المحاسبة الادارية",
-            "يجب عليك ايقاف مركبتك بالشكل المناسب في المناطق الامنة تجنبا للمحاسبة الادارية , ادارة ميستري تاون تتمنى لك يوما ممتعا"
-        ],
-        "crime": [
-            "يمنع منعاً باتاً القيام بأي أعمال (التقديح والاسلوب السيء) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنباً للمحاسبة الادارية ، وادارة مستري تاون تتمنى لك وقتاً ممتعاً",
-            "يمنع منعاً باتا التخريم او اطلاق النار خلف الجدران لتجنب المحاسبة الادارية",
-            "يمنع اعطاء كول والتكلم باريحيه وانت مسقط , ويجب عليك تقمص دور المصاب , تجنبا من المحاسبة الادارية",
-            "عزيزي اللاعب يجب عليك التخطيط قبل بدء السرقة ومع التأكد من العدد المشاكرين بالسيناريو , ادارة مستري تتمنى لك يوم ممتع",
-            "عزيزي المواطن , للتذكير يمنع كلبشة شخص بدون رفع اليد ويجب عليك الانتظار , خلاف ذالك بيتم محاسبتك بمحاسبة اداريا صارمه",
-            "يجب عليك تقدير قيمة مركبتك والقيادة بشكل سليم و تجنب النقزات الغير واقعية, وتقدير حياتك وعدم صدم الاخريين , ادارة مستري تاون تتمنى لك يومأ ممتعأ",
-            "يمنع الحلف باي طريقة كانت ويجب عليك تقمص الحياة الواقعيه وابعاد امور الدين بشكل عام تجنباً للمحاسبة الاداريه، وادارة مستري تاون تتمنى لك وقتاً ممتعاً",
-            "يجب ان يكون التهديد بشكل مباشر و يمنع التهديد من داخل المركبة"
-        ],
-        "general": [
-            "يجب عليك طلب ومسعف والانتظار , ويمنع نقل المسقط بدون طلب مسعف , خلاف ذلك بيتم محاسبتك اداريًا",
-            "يمنع منعًا باتًا معالجة شخص في حال تواجد المسعفين لتجنب المحاسبة الادارية",
-            "في حال إزالة اربع من اطارات السيارة يمنع استكمال القيادة بها",
-            "يمنع حمل اللاعب اثناء ركوب الدباب ايضًا المركبة",
-            "يمنع إرتداء او إستعمال اي خوذة اثناء مشاركتك في اي إطلاق ناري",
-            "يمنع الكذب بالمصطلحات الاتية ( سحر او باخذ حبة او صداع والخ ) .. يعرضك للمحاسبة الادارية",
-            "يمنع منعًا باتًا القيام بأي أعمال ( التقديح والاسلوب السيء ) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنبًا للمحاسبة الادارية .. إدارة ميستري تاون تتمنى لك يومًا ممتعًا",
-            "يمنع عليك تكرار البلاغات والسبام بالبلاغات العسكرية او الصحة , في حال تكرارها سيتم محاسبتك اداريًا"
-        ]
-    };
-
+    // --- نظام Modal الموحد (حل مشكلة القوائم) ---
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, customHtml = null) => {
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerHTML = customHtml ? customHtml : `<p>${msg}</p>`;
         const btns = document.getElementById('modalBtns'); btns.innerHTML = '';
-        if (type === 'ok') btns.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">موافق</button>`;
-        else if (type === 'confirm') {
+        
+        if (type === 'ok') {
+            btns.innerHTML = `<button class="btn btn-primary" style="min-width:100px" onclick="closeModal()">موافق</button>`;
+        } else if (type === 'confirm') {
             const y = document.createElement('button'); y.className = 'btn btn-danger'; y.innerText = 'تأكيد';
             y.onclick = () => { onConfirm(); closeModal(); };
-            const n = document.createElement('button'); n.className = 'btn'; n.style.background = '#475569'; n.innerText = 'إلغاء';
+            const n = document.createElement('button'); n.className = 'btn btn-primary'; n.innerText = 'إلغاء';
             n.onclick = closeModal;
             btns.append(y, n);
         }
@@ -343,34 +299,147 @@
         } else nav('auth');
     });
 
-    window.saveForcedDiscord = async () => {
-        const val = document.getElementById('forceDiscordInput').value;
-        if(!val) return alert("لا يمكن ترك الحقل فارغاً!");
-        await updateDoc(doc(db, "users", curUser.uid), { discordId: val });
-        document.getElementById('discordModal').style.display = 'none';
-        userData.discordId = val;
-        updateSettingsUI();
+    // --- وظائف العدادات (المسح، التصفير، الترتيب) ---
+    window.addCounter = async () => {
+        const n = document.getElementById('counterName').value;
+        const g = document.getElementById('counterGoal').value;
+        if(n && g) {
+            await addDoc(collection(db, "users", curUser.uid, "counters"), { 
+                n, g: parseInt(g), c: 0, createdAt: Date.now() 
+            });
+            document.getElementById('counterName').value = '';
+            document.getElementById('counterGoal').value = '';
+        }
     };
 
-    // تحديث خيارات الأسباب بناءً على القسم والصلاحية
+    window.updateCount = async (id, val) => {
+        await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
+    };
+
+    window.delCounter = (id) => {
+        showAlert("تأكيد الحذف", "هل أنت متأكد من حذف هذا العداد؟", "confirm", async () => {
+            await deleteDoc(doc(db, "users", curUser.uid, "counters", id));
+        });
+    };
+
+    window.resetAllCounters = () => {
+        showAlert("تصفير العدادات", "سيتم تصفير جميع العدادات الحالية، هل أنت متأكد؟", "confirm", async () => {
+            const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
+            const batch = writeBatch(db);
+            q.forEach(docSnap => batch.update(docSnap.ref, { c: 0 }));
+            await batch.commit();
+            showAlert("تم", "تم تصفير جميع العدادات");
+        });
+    };
+
+    window.transferToStats = async () => {
+        const q = await getDocs(collection(db, "users", curUser.uid, "counters"));
+        if(q.empty) return;
+        let summary = "";
+        q.forEach(d => { summary += `${d.data().n}: ${d.data().c}/${d.data().g} | `; });
+        await addDoc(collection(db, "users", curUser.uid, "stats"), { 
+            text: summary, date: new Date().toLocaleString('ar-EG'), createdAt: Date.now() 
+        });
+        showAlert("تم النقل", "تم حفظ الإحصائيات بنجاح");
+    };
+
+    // --- حاسبة العمر (تم إصلاحها) ---
+    window.calculateAge = () => {
+        const bDate = document.getElementById('birthDate').value;
+        if(!bDate) return;
+        const birth = new Date(bDate);
+        const diff = new Date() - birth;
+        const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+        const res = document.getElementById('ageResult');
+        res.innerText = `العمر التقريبي: ${age} سنة`;
+        res.style.color = age >= 16 ? 'var(--success)' : 'var(--danger)';
+    };
+
+    // --- نظام التفعيل والأسئلة ---
+    window.addQuestion = async () => {
+        const text = document.getElementById('qText').value;
+        const type = document.getElementById('qType').value;
+        let opts = [];
+        if(type === 'mcq') {
+            document.querySelectorAll('.opt-in').forEach(i => { if(i.value) opts.push(i.value); });
+        }
+        await addDoc(collection(db, "activation_questions"), { text, type, opts, createdAt: Date.now() });
+        showAlert("تم", "تمت إضافة السؤال بنجاح");
+    };
+
+    function loadQuestions() {
+        onSnapshot(query(collection(db, "activation_questions"), orderBy("createdAt", "asc")), (snap) => {
+            const list = document.getElementById('questionsList');
+            list.innerHTML = '';
+            snap.forEach(docSnap => {
+                const q = docSnap.data();
+                const qDiv = document.createElement('div');
+                qDiv.className = 'card';
+                qDiv.innerHTML = `<p><b>${q.text}</b></p>`;
+                
+                if(q.type === 'mcq') {
+                    q.opts.forEach(opt => {
+                        const oDiv = document.createElement('div');
+                        oDiv.className = 'q-option';
+                        oDiv.innerText = opt;
+                        oDiv.onclick = () => oDiv.classList.toggle('selected');
+                        qDiv.appendChild(oDiv);
+                    });
+                } else {
+                    const oTrue = document.createElement('div');
+                    oTrue.className = 'q-option'; oTrue.innerText = 'صح ✅';
+                    oTrue.onclick = () => { oTrue.classList.add('tf-selected'); oFalse.classList.remove('tf-selected'); };
+                    const oFalse = document.createElement('div');
+                    oFalse.className = 'q-option'; oFalse.innerText = 'خطأ ❌';
+                    oFalse.onclick = () => { oFalse.classList.add('tf-selected'); oTrue.classList.remove('tf-selected'); };
+                    qDiv.append(oTrue, oFalse);
+                }
+                list.appendChild(qDiv);
+            });
+        });
+    }
+
+    // --- الإعدادات (تغيير المعلومات) ---
+    window.promptUpdate = (type) => {
+        let label = type === 'u' ? "اسم المستخدم الجديد" : type === 'e' ? "الإيميل الجديد" : "Discord ID الجديد";
+        const html = `<input type="text" id="newValField" placeholder="${label}"><button class="btn btn-success" onclick="saveUpdate('${type}')">تحديث</button>`;
+        showAlert("تحديث المعلومات", "", "ok", null, html);
+    };
+
+    window.saveUpdate = async (type) => {
+        const val = document.getElementById('newValField').value;
+        if(!val) return;
+        const field = type === 'u' ? 'u' : type === 'e' ? 'e' : 'discordId';
+        await updateDoc(doc(db, "users", curUser.uid), { [field]: val });
+        closeModal();
+        showAlert("تم", "تم تحديث البيانات بنجاح");
+        location.reload();
+    };
+
+    window.requestRank = async () => {
+        await updateDoc(doc(db, "users", curUser.uid), { requestedRank: true });
+        showAlert("طلب رتبة", "تم إرسال طلبك للإدارة بنجاح");
+        document.getElementById('rankBtn').innerText = "تم طلب الرتبة ✅";
+        document.getElementById('rankBtn').disabled = true;
+    };
+
+    // --- إدارة الريبورتات (قوائم منبثقة للنسخ) ---
+    const reportData = {
+        "reportr": ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان", "هل تم خدمتك بالشكل المطلوب؟"],
+        "summon": ["استدعاء مراقبة دورية", "احفظ تصوير 20 دقيقة", "استدعاء توجه للدعم"],
+        "clothes": ["لبس غير مناسب", "تغيير الحزام (عسكري)", "تعديل ملابس الوظيفة"],
+        "rp": ["تقدير موقف واقعي", "تقمص شخصية المصاب", "يمنع التلميح خارج الأربي"],
+        "crime": ["يمنع التقديح", "التخريم ممنوع", "يمنع الكول وأنت مسقط"],
+        "general": ["طلب مسعف والانتظار", "يمنع استكمال القيادة بدون إطارات", "يمنع الكذب بالمصطلحات"]
+    };
+
     window.updateSubReasons = () => {
         const cat = document.getElementById('repCategory').value;
         const resBox = document.getElementById('repReason');
         resBox.innerHTML = '';
-        
-        // قيد رتبة Support: فقط ريبورتات الاستدعاء
-        if (userData.role === 'Support' && cat !== 'summon' && cat !== '') {
-            alert("صلاحيتك تسمح لك فقط بإستخدام قسم 'ريبورتات الاستدعاء'");
-            document.getElementById('repCategory').value = 'summon';
-            updateSubReasons();
-            return;
-        }
-
-        if (cat && reportData[cat]) {
-            reportData[cat].forEach(reason => {
-                const opt = document.createElement('option');
-                opt.value = reason;
-                opt.innerText = reason;
+        if(cat && reportData[cat]) {
+            reportData[cat].forEach(r => {
+                const opt = document.createElement('option'); opt.value = r; opt.innerText = r;
                 resBox.appendChild(opt);
             });
         }
@@ -380,186 +449,124 @@
         const id = document.getElementById('repGameID').value;
         const disc = document.getElementById('repDiscordID').value;
         const msg = document.getElementById('repReason').value;
-
-        if(!id || !msg) return alert("يرجى إدخال ID اللعبة وإختيار السبب أولاً");
-
-        let text = "";
-        if (mode === 'in') {
-            text = `/reportr ${id} ${msg}`;
-        } else {
-            if(!disc) return alert("يرجى إدخال Discord ID للنسخ الخارجي");
-            text = `${msg}\n<@${disc}>`;
-        }
-
-        try {
-            await navigator.clipboard.writeText(text);
-            alert("تم النسخ ✅");
-        } catch (e) { alert("فشل النسخ التلقائي"); }
+        if(!id || !msg) return showAlert("تنبيه", "يرجى إكمال البيانات");
+        
+        const text = mode === 'in' ? `/reportr ${id} ${msg}` : `${msg} \n <@${disc}>`;
+        await navigator.clipboard.writeText(text);
+        showAlert("تم النسخ ✅", `تم نسخ النص لـ (${mode === 'in' ? 'داخلي' : 'خارجي'})`);
     };
 
-    window.handleReg = async () => {
-        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, d = document.getElementById('rDiscord').value, p = document.getElementById('rP').value;
-        if(!u || !e || !p) return showAlert("تنبيه", "يرجى ملء البيانات");
-        const q = await getDocs(query(collection(db, "users"), where("u", "==", u)));
-        if(!q.empty) return showAlert("خطأ", "اسم المستخدم مستخدم مسبقاً");
-
-        try {
-            const res = await createUserWithEmailAndPassword(auth, e, p);
-            await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', requestedRank: false, createdAt: Date.now() });
-        } catch(err) { showAlert("خطأ", err.message); }
-    };
-
-    window.fetchUsersList = async () => {
-        const div = document.getElementById('adminUserList'); div.innerHTML = 'جاري التحميل...';
-        const q = await getDocs(collection(db, "users"));
-        let h = '<table><thead><tr><th>الاسم</th><th>الرتبة</th><th>الإجراءات</th></tr></thead><tbody>';
-        q.forEach(s => {
-            const u = s.data();
-            const rowClass = u.requestedRank ? 'user-requested' : '';
-            h += `<tr class="${rowClass}"><td>${u.u}</td><td>${u.role}</td><td><button class="btn btn-primary" style="padding:5px" onclick="manageUserPrompt('${s.id}', '${u.u}', '${u.role}', '${u.discordId || ''}')">⚙️ إدارة</button></td></tr>`;
-        });
-        div.innerHTML = h + '</tbody></table>';
-    };
-
-    // نافذة إدارة المستخدم (تعديل الرتبة، الاسم، الديسكورد)
-    window.manageUserPrompt = (uid, oldU, oldR, oldD) => {
-        const html = `
-            <div style="text-align:right">
-                <label>اسم المستخدم:</label><input id="editU" value="${oldU}">
-                <label>الديسكورد ID:</label><input id="editD" value="${oldD}">
-                <label>الرتبة:</label>
-                <select id="editR">
-                    <option value="User" ${oldR=='User'?'selected':''}>User</option>
-                    <option value="Support" ${oldR=='Support'?'selected':''}>Support</option>
-                    <option value="Admin" ${oldR=='Admin'?'selected':''}>Admin</option>
-                </select>
-                <button class="btn btn-success" onclick="saveUserAdmin('${uid}')">حفظ التغييرات</button>
-            </div>`;
-        showAlert("إدارة المستخدم", "", "ok", null, html);
-    };
-
-    window.saveUserAdmin = async (uid) => {
-        const u = document.getElementById('editU').value;
-        const d = document.getElementById('editD').value;
-        const r = document.getElementById('editR').value;
-        try {
-            await updateDoc(doc(db, "users", uid), { u, discordId: d, role: r, requestedRank: false });
-            closeModal();
-            fetchUsersList();
-            alert("تم التحديث");
-        } catch(e) { alert("فشل التحديث"); }
-    };
-
+    // --- تهيئة الموقع الأساسية ---
     function initListeners() {
-        onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "asc")), (snap) => {
-            const list = document.getElementById('countersList'); list.innerHTML = '';
+        // الاستماع للعدادات (مع ترتيب المكتمل)
+        onSnapshot(query(collection(db, "users", curUser.uid, "counters"), orderBy("createdAt", "desc")), (snap) => {
+            const list = document.getElementById('countersList');
+            list.innerHTML = '';
             snap.forEach(d => {
                 const x = d.data(); const done = x.c >= x.g;
-                list.innerHTML += `<div class="counter-item ${done ? 'completed' : ''}"><b>${x.n}</b><div style="font-size:1.5rem">${x.c}/${x.g}</div><button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1})">+</button><button class="btn btn-danger" style="margin-top:5px" onclick="updateCount('${d.id}', ${x.c-1})">-</button></div>`;
+                const div = document.createElement('div');
+                div.className = `counter-item ${done ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <b>${x.n}</b>
+                    <div style="font-size:1.5rem; margin:10px 0;">${x.c}/${x.g}</div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-primary" onclick="updateCount('${d.id}', ${x.c+1})">+</button>
+                        <button class="btn btn-danger" onclick="updateCount('${d.id}', ${x.c-1})">-</button>
+                        <button class="btn btn-danger" style="background:#4b5563" onclick="delCounter('${d.id}')">🗑️</button>
+                    </div>`;
+                list.appendChild(div);
             });
         });
 
-        onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
-            const list = document.getElementById('notesList'); list.innerHTML = '';
+        // سجل الإحصائيات
+        onSnapshot(query(collection(db, "users", curUser.uid, "stats"), orderBy("createdAt", "desc")), (snap) => {
+            const sList = document.getElementById('statsList');
+            sList.innerHTML = '';
             snap.forEach(d => {
-                const note = d.data();
-                list.innerHTML += `<div class="card"><p>${note.t}</p><div style="display:flex; gap:5px;"><button class="btn btn-admin" style="padding:5px" onclick="editNotePrompt('${d.id}', \`${note.t}\`)">تعديل</button><button class="btn btn-danger" style="padding:5px" onclick="delGen('notes','${d.id}')">حذف</button></div></div>`;
+                sList.innerHTML += `<div class="card" style="font-size:0.9rem"><b>📅 ${d.data().date}</b><p>${d.data().text}</p></div>`;
             });
         });
+
+        // الملاحظات
+        onSnapshot(query(collection(db, "users", curUser.uid, "notes"), orderBy("createdAt", "desc")), (snap) => {
+            const nList = document.getElementById('notesList');
+            nList.innerHTML = '';
+            snap.forEach(d => {
+                nList.innerHTML += `<div class="card"><p>${d.data().t}</p><button class="btn btn-danger" style="padding:5px; width:auto" onclick="delGen('notes','${d.id}')">حذف</button></div>`;
+            });
+        });
+
+        loadQuestions();
     }
 
-    window.editNotePrompt = (id, oldText) => {
-        const html = `<textarea id="editNoteInput" rows="4">${oldText}</textarea><button class="btn btn-success" onclick="saveNoteEdit('${id}')">حفظ</button>`;
-        showAlert("تعديل الملاحظة", "", "ok", null, html);
-    };
-
-    window.saveNoteEdit = async (id) => {
-        const newText = document.getElementById('editNoteInput').value;
-        await updateDoc(doc(db, "users", curUser.uid, "notes", id), { t: newText });
-        closeModal();
-    };
-
+    // الملاحة والوظائف العامة
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id + 'Page').classList.add('active');
         toggleSidebar(false);
     };
+
     window.toggleSidebar = (f) => {
         const s = document.getElementById('sidebar');
         const open = f !== undefined ? f : !s.classList.contains('open');
         s.classList.toggle('open', open);
         document.getElementById('overlay').style.display = open ? 'block' : 'none';
     };
-    window.logout = () => signOut(auth).then(() => location.reload());
-    window.updateCount = async (id, val) => await updateDoc(doc(db, "users", curUser.uid, "counters", id), { c: Math.max(0, val) });
-    window.delGen = (col, id) => showAlert("تأكيد", "حذف نهائي؟", "confirm", async () => await deleteDoc(doc(db, "users", curUser.uid, col, id)));
-    window.toggleAuth = (reg) => { document.getElementById('loginBox').classList.toggle('hidden', reg); document.getElementById('regBox').classList.toggle('hidden', !reg); };
 
+    window.logout = () => signOut(auth).then(() => location.reload());
+    
     function applyPermissions() {
         const r = userData.role;
-        // إدارة الحقول المخفية بناءً على الرتبة
         document.getElementById('navAdmin').classList.toggle('hidden', r !== 'Admin');
         document.getElementById('navAnnounce').classList.toggle('hidden', r !== 'Admin');
-        document.getElementById('navReports').classList.toggle('hidden', r === 'User'); // User لا يرى الريبورتات
+        document.getElementById('navReports').classList.toggle('hidden', r === 'User');
         document.getElementById('navActivation').classList.toggle('hidden', !['Admin','Support'].includes(r));
     }
-    
-    function updateSettingsUI() {
+
+    window.updateSettingsUI = () => {
         document.getElementById('setUName').innerText = userData.u;
         document.getElementById('setUserRole').innerText = userData.role;
         document.getElementById('setUserEmail').innerText = userData.e;
         document.getElementById('setUserDiscord').innerText = userData.discordId || "غير مضاف";
-    }
-
-    window.sendAnnouncement = async () => {
-        const t = document.getElementById('annText').value;
-        await setDoc(doc(db, "system_notices", "current"), { text: t, expiresAt: Date.now() + 86400000 });
-        showAlert("تم", "نشر التعميم");
     };
 
-    window.deleteAnnouncement = async () => {
-        await deleteDoc(doc(db, "system_notices", "current"));
-        showAlert("تم", "حذف التعميم");
+    window.handleLogin = async () => {
+        const u = document.getElementById('lUser').value;
+        const p = document.getElementById('lPass').value;
+        try {
+            let email = u;
+            if(!u.includes('@')) {
+                const q = await getDocs(query(collection(db, "users"), where("u", "==", u)));
+                if(q.empty) throw new Error("User not found");
+                email = q.docs[0].data().e;
+            }
+            await signInWithEmailAndPassword(auth, email, p);
+        } catch { showAlert("خطأ", "بيانات الدخول غير صحيحة"); }
+    };
+
+    window.handleReg = async () => {
+        const u = document.getElementById('rU').value, e = document.getElementById('rE').value, d = document.getElementById('rDiscord').value, p = document.getElementById('rP').value;
+        if(!u || !e || !p) return showAlert("تنبيه", "يرجى ملء البيانات");
+        try {
+            const res = await createUserWithEmailAndPassword(auth, e, p);
+            await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', requestedRank: false, createdAt: Date.now() });
+        } catch(err) { showAlert("خطأ", err.message); }
+    };
+
+    window.toggleAuth = (reg) => {
+        document.getElementById('loginBox').classList.toggle('hidden', reg);
+        document.getElementById('regBox').classList.toggle('hidden', !reg);
     };
 
     function listenToAnnouncements() {
         onSnapshot(doc(db, "system_notices", "current"), (s) => {
             const b = document.getElementById('globalNotice');
-            if(s.exists()) { document.getElementById('noticeText').innerText = s.data().text; b.style.display = 'block'; }
-            else b.style.display = 'none';
+            if(s.exists()) {
+                document.getElementById('noticeText').innerText = s.data().text;
+                b.style.display = 'block';
+            } else b.style.display = 'none';
         });
     }
-
-    window.handleLogin = async () => {
-        const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
-        try {
-            let email = u;
-            if(!u.includes('@')) {
-                const q = await getDocs(query(collection(db, "users"), where("u", "==", u)));
-                if(q.empty) throw new Error();
-                email = q.docs[0].data().e;
-            }
-            await signInWithEmailAndPassword(auth, email, p);
-        } catch { showAlert("خطأ", "بيانات غير صحيحة"); }
-    };
-    
-    window.addNote = async () => {
-        const t = document.getElementById('noteInput').value;
-        if(t) await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
-        document.getElementById('noteInput').value = '';
-    };
-
-    window.addCounter = async () => {
-        const n = document.getElementById('counterName').value;
-        const g = document.getElementById('counterGoal').value;
-        if(n && g) await addDoc(collection(db, "users", curUser.uid, "counters"), { n, g: parseInt(g), c: 0, createdAt: Date.now() });
-    };
-
-    window.requestRank = async () => {
-        await updateDoc(doc(db, "users", curUser.uid), { requestedRank: true });
-        alert("تم إرسال طلب الترقية للآدمن");
-    };
-
 </script>
 </body>
 </html>
