@@ -31,8 +31,8 @@
         /* Custom Modal (In-Site) */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); 
                 display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); padding: 30px; border-radius: 24px; width: 90%; max-width: 480px; 
-                         text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
+        .modal-content { background: var(--card); padding: 30px; border-radius: 24px; width: 90%; max-width: 550px; 
+                         text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto; }
         
         /* Layout */
         header { background: rgba(21, 25, 33, 0.8); backdrop-filter: blur(10px); padding: 12px 5%; display: flex; 
@@ -48,6 +48,9 @@
                          display: flex; align-items: center; gap: 12px; color: var(--text-muted); }
         .sidebar-item:hover, .sidebar-item.active-nav { background: var(--primary); color: white; }
 
+        /* Global Notice Bar */
+        #globalNoticeBar { background: var(--admin); color: #000; padding: 10px; text-align: center; font-weight: bold; display: none; }
+
         /* Buttons & Inputs */
         input, textarea, select { width: 100%; padding: 12px 16px; margin: 8px 0; border-radius: 12px; border: 1px solid var(--border); 
                 background: #0b0e14; color: white; font-size: 0.95rem; }
@@ -59,7 +62,7 @@
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-admin { background: var(--admin); color: white; }
+        .btn-admin { background: var(--admin); color: #000; }
         .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
 
         /* Sections */
@@ -78,11 +81,11 @@
         .completed .counter-val { color: var(--success); }
         
         /* Quiz System Styles */
-        .quiz-item { background: #0b0e14; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .option-tag { display: inline-block; padding: 5px 12px; background: var(--border); border-radius: 8px; font-size: 0.8rem; margin: 4px; }
+        .quiz-item { background: #0b0e14; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--border); text-align: right; }
+        .option-tag { display: inline-block; padding: 5px 12px; background: var(--border); border-radius: 8px; font-size: 0.8rem; margin: 4px; border: 1px solid transparent; }
+        .option-tag.correct { border-color: var(--success); color: var(--success); background: rgba(16, 185, 129, 0.1); }
 
         .hidden { display: none !important; }
-        pre { white-space: pre-wrap; background: #080a0f; padding: 15px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.9rem; color: #e2e8f0; }
 
         /* Admin Table */
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
@@ -94,6 +97,8 @@
 </head>
 <body>
 
+<div id="globalNoticeBar"></div>
+
 <div class="modal" id="customModal">
     <div class="modal-content">
         <h3 id="mTitle" style="margin-top:0;"></h3>
@@ -101,7 +106,7 @@
         <div id="mInputContainer" class="hidden">
             <input type="text" id="mPromptInput" placeholder="ادخل القيمة هنا...">
         </div>
-        <div id="mFooter" style="display: flex; gap: 10px; margin-top: 20px;"></div>
+        <div id="mFooter" style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; justify-content: center;"></div>
     </div>
 </div>
 
@@ -111,14 +116,14 @@
         <span style="font-weight: 900; color: var(--primary); font-size: 1.4rem; letter-spacing: 1px;">ANWAR CLOUD</span>
         <span id="userRankLabel" style="font-size: 0.7rem; color: var(--admin); font-weight: bold; background: rgba(245,158,11,0.1); padding: 2px 8px; border-radius: 5px;">User</span>
     </div>
-    <div style="width: 45px;"></div> </header>
+    <div style="width: 45px;"></div> 
+</header>
 
 <div id="overlay" onclick="toggleSidebar(false)" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1500; display:none;"></div>
 
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-item" id="nav-counter" onclick="nav('counter')">📊 العدادات والسجل</div>
     <div class="sidebar-item" id="nav-reports" onclick="nav('reports')">📋 الريبورتات</div>
-    <div class="sidebar-item" id="nav-notes" onclick="nav('notes')">📝 الملاحظات</div>
     <div class="sidebar-item" id="nav-activation" onclick="nav('activation')">🛡️ التفعيل</div>
     <div class="sidebar-item" id="nav-settings" onclick="nav('settings')">⚙️ الإعدادات</div>
     <div class="sidebar-item hidden" id="nav-admin" style="color: var(--admin); border-top: 1px solid var(--border);" onclick="nav('admin')">🔑 لوحة الإدارة</div>
@@ -196,15 +201,6 @@
         </div>
     </div>
 
-    <div id="notesPage" class="section">
-        <div class="card" style="max-width: 800px; margin: auto;">
-            <h3>📝 إضافة ملاحظة (TXT)</h3>
-            <textarea id="noteInput" rows="4" placeholder="اكتب ملاحظتك هنا..."></textarea>
-            <button class="btn btn-primary" onclick="addNote()">حفظ</button>
-        </div>
-        <div id="notesList" class="grid-2" style="margin-top: 20px;"></div>
-    </div>
-
     <div id="activationPage" class="section">
         <div class="grid-2">
             <div class="card">
@@ -215,7 +211,7 @@
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h3>❓ قائمة الأسئلة</h3>
-                    <button class="btn btn-primary btn-sm" id="addQuestionBtn" onclick="openAddQuestionModal()">إضافة سؤال +</button>
+                    <button class="btn btn-primary btn-sm hidden" id="addQuestionBtn" onclick="openAddQuestionModal()">إضافة سؤال +</button>
                 </div>
                 <div id="quizContainer" style="margin-top: 15px;"></div>
             </div>
@@ -242,6 +238,17 @@
     </div>
 
     <div id="adminPage" class="section">
+        <div class="card">
+            <h3>📢 تعميم النظام</h3>
+            <textarea id="noticeInput" placeholder="اكتب نص التعميم هنا..."></textarea>
+            <div class="grid-2">
+                <input type="number" id="noticeHours" placeholder="مدة التعميم بالساعات">
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" style="flex:1" onclick="postNotice()">نشر التعميم</button>
+                    <button class="btn btn-danger" style="flex:1" onclick="deleteNotice()">حذف التعميم الحالي</button>
+                </div>
+            </div>
+        </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>🔑 إدارة النظام</h2>
@@ -289,7 +296,7 @@
             const b1 = document.createElement('button'); b1.className='btn btn-danger'; b1.innerText='تأكيد'; 
             b1.onclick=()=>{ 
                 const val = document.getElementById('mPromptInput').value;
-                onConfirm(val); 
+                if(onConfirm) onConfirm(val); 
                 m.style.display='none'; 
                 document.getElementById('mPromptInput').value = '';
             };
@@ -304,7 +311,7 @@
         m.style.display = 'flex';
     };
 
-    // --- Navigation & Permissions ---
+    // --- Navigation ---
     window.nav = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-nav'));
@@ -318,7 +325,7 @@
         document.getElementById('overlay').style.display = open ? 'block' : 'none';
     };
 
-    // --- Auth Logic ---
+    // --- Auth ---
     window.handleLogin = async () => {
         const u = document.getElementById('lUser').value, p = document.getElementById('lPass').value;
         if(!u || !p) return showModal("تنبيه", "يرجى تعبئة الحقول");
@@ -332,7 +339,7 @@
             }
             await signInWithEmailAndPassword(auth, email, p);
             if(document.getElementById('rememberMe').checked) localStorage.setItem('anwar_rem', JSON.stringify({u, p}));
-        } catch(e) { showModal("خطأ", e.message); }
+        } catch(e) { showModal("خطأ", "بيانات الدخول غير صحيحة"); }
     };
 
     window.handleRegister = async () => {
@@ -346,13 +353,13 @@
 
         try {
             const res = await createUserWithEmailAndPassword(auth, e, p);
-            await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', createdAt: Date.now() });
+            await setDoc(doc(db, "users", res.user.uid), { u, e, discordId: d, role: 'User', requestedRank: false, createdAt: Date.now() });
         } catch(err) { showModal("خطأ", err.message); }
     };
 
-    window.logout = () => signOut(auth).then(()=>location.reload());
+    window.logout = () => showModal("تسجيل الخروج", "هل أنت متأكد؟", "confirm", () => signOut(auth).then(()=>location.reload()));
 
-    // --- Counter & Stats Logic ---
+    // --- Counters ---
     window.addCounter = async () => {
         const n = document.getElementById('counterName').value, g = document.getElementById('counterGoal').value;
         if(!n || !g) return;
@@ -365,8 +372,7 @@
         list.innerHTML = '';
         let items = [];
         snap.forEach(d => items.push({id: d.id, ...d.data()}));
-        items.sort((a,b) => (a.current >= a.goal) - (b.current >= b.goal)); // المكتمل ينزل تحت
-
+        items.sort((a,b) => (a.current >= a.goal) - (b.current >= b.goal));
         items.forEach(c => {
             const isDone = c.current >= c.goal;
             const div = document.createElement('div');
@@ -374,7 +380,7 @@
             div.innerHTML = `
                 <div style="font-weight:700; color:var(--text-muted)">${c.name}</div>
                 <div class="counter-val">${c.current}</div>
-                <div style="font-size:0.8rem;">${isDone ? '✨ تم الإنجاز ✨' : 'باقي لك ' + (c.goal - c.current)}</div>
+                <div style="font-size:0.8rem;">${isDone ? '✨ تم الإنجاز ✨' : 'باقي ' + (c.goal - c.current)}</div>
                 <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
                     <button class="btn btn-primary" style="width:40px; height:40px; padding:0;" onclick="updateCount('${c.id}', ${c.current + 1})">+</button>
                     <button class="btn btn-danger" style="width:40px; height:40px; padding:0;" onclick="updateCount('${c.id}', ${c.current - 1})">-</button>
@@ -384,13 +390,10 @@
             list.appendChild(div);
         });
     };
-
     window.updateCount = async (id, v) => v >= 0 && await updateDoc(doc(db, "users", auth.currentUser.uid, "counters", id), { current: v });
-    window.confirmDelCounter = (id) => showModal("حذف العداد", "هل تريد حذف هذا العداد نهائياً؟", "confirm", async () => {
-        await deleteDoc(doc(db, "users", auth.currentUser.uid, "counters", id));
-    });
-
-    window.transferToStats = () => showModal("نقل البيانات", "سيتم تصفير جميع العدادات وحفظها في السجل.", "confirm", async () => {
+    window.confirmDelCounter = (id) => showModal("حذف", "حذف العداد؟", "confirm", () => deleteDoc(doc(db, "users", auth.currentUser.uid, "counters", id)));
+    
+    window.transferToStats = () => showModal("نقل البيانات", "تصفير العدادات ونقلها للسجل؟", "confirm", async () => {
         const q = await getDocs(collection(db, "users", auth.currentUser.uid, "counters"));
         if(q.empty) return;
         let summary = [];
@@ -399,138 +402,118 @@
             summary.push(`${d.data().name}: ${d.data().current}`);
             batch.update(d.ref, { current: 0 });
         });
-        await addDoc(collection(db, "users", auth.currentUser.uid, "stats"), {
-            content: summary.join(" | "), 
-            timestamp: Date.now(), 
-            date: new Date().toLocaleString('ar-EG')
-        });
+        await addDoc(collection(db, "users", auth.currentUser.uid, "stats"), { content: summary.join(" | "), timestamp: Date.now(), date: new Date().toLocaleString('ar-EG') });
         await batch.commit();
     });
 
-    // --- Reports Logic ---
+    // --- Reports ---
     const reportsMap = {
-        "reportr": ["يرجى شرح مشكلتك لكي يتم خدمتك", "توجه للدعم الفني مع مايثبت ذلك", "سيتم خدمتك الان", "هل تم خدمتك بالشكل المطلوب؟", "سيتم التاكد من الموضوع , كذللك احتياطًا يرجى منك حفظ تصويرك اخر 20 دقيقه"],
-        "summon": ["استدعاء يخص المراقبة الدورية توجه للدعم مع تصوير 20 دقيقة", "احفظ تصوير اخر 20 دقيقه من الان وبعد الانتهاء من السيناريو توجه لدعم الفني مباشره", "استدعاء توجه للدعم الفني مع تصوير اخر 20 دقيقه"],
-        "steam": ["الرجاء منك تغيير اسم ستيمك وفايف ام ويكون مطابق لاسم الدسكورد الخاص بك , وعدم تسميته ب اسم عربي او ارقام او زخرفة"],
-        "clothes": ["يجب عليك لبس مناسب للمكان و تطبيق الاربي المناسب للمكان", "يجب عليك تغيير لبسك لتجنب المحاسبة الادارية", "يجب عليك لبس حذاء لتجنب المحاسبة الادارية", "يجب عليك تغيير الحزام بسبب انه خاص للعساكر فقط", "يجب عليك تعديل ملابسك لتتناسب مع وظيفتك"],
-        "rp": ["يجب عليك تقدير موقفك وقياسها بالحياة الواقعيه", "يمنع منعا باتا الخروج عن الرول بلاي او التلميح خارج الار بي", "يجب عليك ايقاف مركبتك بالشكل المناسب في المناطق الامنة"],
-        "crime": ["يمنع القيام بأي أعمال (التقديح والاسلوب السيء) من العدم", "يمنع التخريم او اطلاق النار خلف الجدران", "يجب عليك تقمص دور المصاب وقياسها بالحياة الواقعيه", "يجب عليك التخطيط قبل بدء السرقة", "يمنع كلبشة شخص بدون رفع اليد"],
-        "general": ["يجب عليك طلب مسعف والانتظار", "يمنع معالجة شخص في حال تواجد المسعفين", "في حال إزالة اربع من اطارات السيارة يمنع استكمال القيادة بها", "يمنع إرتداء اي خوذة اثناء مشاركتك في اي إطلاق ناري", "يمنع الكذب بالمصطلحات الاتية ( سحر او باخذ حبة او صداع )"]
+        "reportr": ["يرجى شرح مشكلتك", "توجه للدعم الفني", "سيتم خدمتك الان", "هل تم خدمتك؟", "حفظ تصوير آخر 20 دقيقة"],
+        "summon": ["استدعاء مراقبة دورية - تصوير 20 دقيقة", "احفظ تصويرك وتوجه للدعم بعد السيناريو", "استدعاء دعم فني - تصوير 20 دقيقة"],
+        "steam": ["تغيير اسم ستيم ليكون مطابق للدسكورد"],
+        "clothes": ["لبس غير مناسب", "تغيير اللبس لتجنب المحاسبة", "لبس حذاء", "الحزام خاص للعساكر", "تعديل الملابس للوظيفة"],
+        "rp": ["تقدير الموقف واقعياً", "منع الخروج عن الرول بلاي", "إيقاف المركبة في أماكن آمنة"],
+        "crime": ["منع التقديح", "منع التخريم", "تقمص دور المصاب", "التخطيط قبل السرقة", "منع الكلبشة بدون رفع يد"],
+        "general": ["طلب مسعف والانتظار", "منع معالجة بوجود مسعف", "منع القيادة بـ 4 إطارات تالفة", "منع الخوذة في الإطلاق", "منع الكذب بالمصطلحات"]
     };
 
     window.loadReasons = () => {
         const cat = document.getElementById('repCategory').value;
-        const box = document.getElementById('reasonsBox');
-        box.innerHTML = '';
-        if(userData.role === 'Support' && cat !== 'summon') {
-            box.innerHTML = '<p style="color:var(--danger)">عذراً، رتبة Support مخولة فقط بقسم "الاستدعاء".</p>';
-            return;
-        }
-        if(reportsMap[cat]) {
-            reportsMap[cat].forEach(r => {
-                const div = document.createElement('div');
-                div.style.padding = '8px'; div.style.cursor = 'pointer'; div.style.borderBottom = '1px solid var(--border)';
-                div.innerHTML = `<input type="radio" name="res" value="${r}"> ${r}`;
-                div.onclick = () => div.querySelector('input').checked = true;
-                box.appendChild(div);
-            });
-        }
-    };
-
-    window.copyReport = (mode) => {
-        const id = document.getElementById('repGameID').value;
-        const dsc = document.getElementById('repDiscordID').value;
-        const sel = document.querySelector('input[name="res"]:checked');
-        if(!id || !sel) return showModal("تنبيه", "أكمل البيانات واختر السبب");
-        const txt = mode === 'in' ? `/reportr ${id} ${sel.value}` : `${sel.value}\n<@${dsc}>`;
-        navigator.clipboard.writeText(txt).then(()=>showModal("تم النسخ", "تم الحفظ في الحافظة ✅"));
-    };
-
-    // --- Notes Logic ---
-    window.addNote = async () => {
-        const t = document.getElementById('noteInput').value;
-        if(!t) return;
-        await addDoc(collection(db, "users", auth.currentUser.uid, "notes"), { text: t, createdAt: Date.now() });
-        document.getElementById('noteInput').value = '';
-    };
-
-    window.renderNotes = (snap) => {
-        const list = document.getElementById('notesList'); list.innerHTML = '';
-        snap.forEach(d => {
-            const n = d.data();
-            const card = document.createElement('div'); card.className = 'card';
-            card.innerHTML = `
-                <pre>${n.text.replace(/</g, "&lt;")}</pre>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn btn-primary" style="padding:5px 10px;" onclick="copyNote(\`${n.text.replace(/`/g, '\\`')}\`)">نسخ</button>
-                    <button class="btn btn-danger" style="padding:5px 10px;" onclick="delNote('${d.id}')">حذف</button>
-                </div>
-            `;
-            list.appendChild(card);
+        const box = document.getElementById('reasonsBox'); box.innerHTML = '';
+        if(userData.role === 'Support' && cat !== 'summon') { box.innerHTML = '<p style="color:var(--danger)">مسموح لك فقط بقسم الاستدعاء.</p>'; return; }
+        if(reportsMap[cat]) reportsMap[cat].forEach(r => {
+            const div = document.createElement('div'); div.style.padding = '8px'; div.style.cursor = 'pointer'; div.style.borderBottom = '1px solid var(--border)';
+            div.innerHTML = `<input type="radio" name="res" value="${r}"> ${r}`;
+            div.onclick = () => div.querySelector('input').checked = true;
+            box.appendChild(div);
         });
     };
-    window.copyNote = (t) => navigator.clipboard.writeText(t).then(()=>showModal("تم", "تم نسخ الملاحظة"));
-    window.delNote = (id) => showModal("حذف", "هل أنت متأكد؟", "confirm", ()=>deleteDoc(doc(db, "users", auth.currentUser.uid, "notes", id)));
-
-    // --- Activation & Age ---
-    window.calculateAge = () => {
-        const b = new Date(document.getElementById('birthDate').value);
-        const age = Math.floor((new Date() - b) / 31557600000);
-        const res = document.getElementById('ageResult');
-        res.innerText = age + " سنة";
-        res.style.color = age >= 16 ? "var(--success)" : "var(--danger)";
+    window.copyReport = (mode) => {
+        const id = document.getElementById('repGameID').value, dsc = document.getElementById('repDiscordID').value, sel = document.querySelector('input[name="res"]:checked');
+        if(!id || !sel) return showModal("تنبيه", "أكمل البيانات");
+        const txt = mode === 'in' ? `/reportr ${id} ${sel.value}` : `${sel.value}\n<@${dsc}>`;
+        navigator.clipboard.writeText(txt).then(()=>showModal("تم", "تم النسخ بنجاح"));
     };
 
-    // --- Quiz Logic (Solved) ---
+    // --- Activation Quiz ---
     window.openAddQuestionModal = () => {
         const html = `
             <input type="text" id="qTitle" placeholder="نص السؤال">
-            <select id="qType" onchange="toggleOptions(this.value)">
+            <select id="qType" onchange="toggleQType(this.value)">
                 <option value="boolean">صح / خطأ</option>
-                <option value="multiple">خيار متعدد</option>
+                <option value="multiple">اختيار متعدد (6 خيارات)</option>
             </select>
-            <div id="optsInput" class="hidden">
-                <input type="text" id="qOptions" placeholder="الخيارات (افصل بينها بفاصلة ,)">
+            <div id="boolAns">
+                <label>الإجابة الصحيحة:</label>
+                <select id="qBoolCorrect"><option value="صح">صح</option><option value="خطأ">خطأ</option></select>
+            </div>
+            <div id="multAns" class="hidden">
+                <input type="text" id="opt1" placeholder="الخيار 1"><input type="text" id="opt2" placeholder="الخيار 2">
+                <input type="text" id="opt3" placeholder="الخيار 3"><input type="text" id="opt4" placeholder="الخيار 4">
+                <input type="text" id="opt5" placeholder="الخيار 5"><input type="text" id="opt6" placeholder="الخيار 6">
+                <label>رقم الخيار الصحيح (1-6):</label>
+                <input type="number" id="qMultCorrect" min="1" max="6" value="1">
             </div>
         `;
-        showModal("إضافة سؤال جديد", html, "confirm", async () => {
-            const title = document.getElementById('qTitle').value;
-            const type = document.getElementById('qType').value;
-            const options = type === 'multiple' ? document.getElementById('qOptions').value.split(',') : ['صح', 'خطأ'];
-            if(title) await addDoc(collection(db, "global_quiz"), { title, type, options, createdAt: Date.now() });
+        showModal("إضافة سؤال", html, "confirm", async () => {
+            const title = document.getElementById('qTitle').value, type = document.getElementById('qType').value;
+            let options = [], correct = "";
+            if(type === 'boolean') { options = ['صح', 'خطأ']; correct = document.getElementById('qBoolCorrect').value; }
+            else { 
+                for(let i=1; i<=6; i++) { let v = document.getElementById('opt'+i).value; if(v) options.push(v); }
+                correct = options[parseInt(document.getElementById('qMultCorrect').value)-1] || options[0];
+            }
+            if(title) await addDoc(collection(db, "global_quiz"), { title, type, options, correct, createdAt: Date.now() });
         });
     };
-
-    window.toggleOptions = (v) => document.getElementById('optsInput').classList.toggle('hidden', v !== 'multiple');
-
+    window.toggleQType = (v) => {
+        document.getElementById('boolAns').classList.toggle('hidden', v !== 'boolean');
+        document.getElementById('multAns').classList.toggle('hidden', v !== 'multiple');
+    };
     window.renderQuiz = (snap) => {
         const cont = document.getElementById('quizContainer'); cont.innerHTML = '';
         snap.forEach(d => {
             const q = d.data();
             const div = document.createElement('div'); div.className = 'quiz-item';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between;">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
                     <b>${q.title}</b>
-                    ${userData.role === 'Admin' ? `<span onclick="delQuiz('${d.id}')" style="cursor:pointer; color:var(--danger)">🗑️</span>` : ''}
+                    ${['Admin', 'Management', 'Support'].includes(userData.role) ? `<span onclick="delQuiz('${d.id}')" style="cursor:pointer; color:var(--danger)">🗑️</span>` : ''}
                 </div>
                 <div style="margin-top:10px;">
-                    ${q.options.map(o => `<span class="option-tag">${o.trim()}</span>`).join('')}
+                    ${q.options.map(o => `<span class="option-tag ${o === q.correct ? 'correct' : ''}">${o}</span>`).join('')}
                 </div>
             `;
             cont.appendChild(div);
         });
     };
-    window.delQuiz = (id) => showModal("حذف سؤال", "حذف؟", "confirm", ()=>deleteDoc(doc(db, "global_quiz", id)));
+    window.delQuiz = (id) => showModal("حذف", "حذف السؤال؟", "confirm", () => deleteDoc(doc(db, "global_quiz", id)));
+    window.calculateAge = () => {
+        const b = new Date(document.getElementById('birthDate').value);
+        const age = Math.floor((new Date() - b) / 31557600000);
+        const res = document.getElementById('ageResult'); res.innerText = age + " سنة";
+        res.style.color = age >= 16 ? "var(--success)" : "var(--danger)";
+    };
 
-    // --- Admin Panel ---
+    // --- Admin Functions ---
+    window.postNotice = async () => {
+        const txt = document.getElementById('noticeInput').value, hrs = document.getElementById('noticeHours').value;
+        if(!txt || !hrs) return showModal("تنبيه", "أدخل النص والمدة");
+        const expiry = Date.now() + (parseInt(hrs) * 3600000);
+        await setDoc(doc(db, "system_notices", "current"), { text: txt, expiry });
+        document.getElementById('noticeInput').value = '';
+    };
+    window.deleteNotice = async () => await deleteDoc(doc(db, "system_notices", "current"));
+    
     window.refreshAdminList = async () => {
         const cont = document.getElementById('adminUserTable'); cont.innerHTML = 'جاري التحميل...';
         const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc")));
         let h = `<table><tr><th>المستخدم</th><th>Discord</th><th>الرتبة</th><th>إجراء</th></tr>`;
         snap.forEach(d => {
             const u = d.data();
+            const nameColor = u.requestedRank ? 'color: var(--admin); font-weight: bold;' : '';
             h += `<tr>
-                <td>${u.u}<br><small>${u.e}</small></td>
+                <td style="${nameColor}">${u.u}<br><small>${u.e}</small></td>
                 <td>${u.discordId || '-'}</td>
                 <td>
                     <select onchange="updateUserRole('${d.id}', this.value)" style="padding:4px; width:auto;">
@@ -545,71 +528,58 @@
         });
         cont.innerHTML = h + `</table>`;
     };
-
     window.updateUserRole = async (uid, r) => {
-        await updateDoc(doc(db, "users", uid), { role: r });
-        showModal("نجاح", "تم تحديث الرتبة.");
+        await updateDoc(doc(db, "users", uid), { role: r, requestedRank: false });
+        showModal("تم", "تم تحديث الرتبة بنجاح");
     };
+    window.adminDelUser = (id) => showModal("تحذير", "حذف نهائي؟", "confirm", () => deleteDoc(doc(db, "users", id)).then(refreshAdminList));
 
-    window.adminDelUser = (id) => showModal("تحذير", "حذف المستخدم نهائياً؟", "confirm", ()=>deleteDoc(doc(db, "users", id)).then(refreshAdminList));
-
+    // --- User Settings ---
     window.promptUpdate = (type) => {
-        const label = type === 'username' ? "اسم المستخدم الجديد" : "كلمة المرور الجديدة";
-        showModal(`تعديل ${label}`, "", "prompt", async (val) => {
+        const lbl = type === 'username' ? "اليوزر الجديد" : "الباسورد الجديد";
+        showModal(`تعديل ${lbl}`, "", "prompt", async (val) => {
             if(!val) return;
             if(type === 'username') await updateDoc(doc(db, "users", auth.currentUser.uid), { u: val });
             else await updatePassword(auth.currentUser, val);
-            showModal("تم", "تم التحديث بنجاح.");
+            showModal("نجاح", "تم التعديل");
         });
     };
+    window.requestRank = () => showModal("طلب ترقية", "هل تود إرسال طلب ترقية للإدارة؟", "confirm", async () => {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { requestedRank: true });
+        showModal("تم", "تم إرسال الطلب");
+    });
 
-    window.requestRank = () => {
-        showModal("طلب رتبة", "هل تريد إرسال طلب ترقية للإدارة؟", "confirm", async () => {
-            await addDoc(collection(db, "notifications"), { uid: auth.currentUser.uid, type: 'rank_request', user: userData.u });
-            showModal("تم", "تم إرسال الطلب.");
-        });
-    };
-
-    // --- Auth State & Permissions ---
+    // --- Auth State ---
     onAuthStateChanged(auth, async (user) => {
         if(user) {
-            const d = await getDoc(doc(db, "users", user.uid));
-            userData = d.data();
-            
-            // UI Access Control
-            document.getElementById('authPage').classList.add('hidden');
-            document.getElementById('mainHeader').classList.remove('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('userRankLabel').innerText = userData.role;
-            
-            // Hide/Show based on Role
-            const r = userData.role;
-            document.getElementById('nav-reports').classList.toggle('hidden', r === 'User');
-            document.getElementById('nav-admin').classList.toggle('hidden', r !== 'Admin');
-            document.getElementById('nav-activation').classList.toggle('hidden', r === 'User');
-            document.getElementById('addQuestionBtn').classList.toggle('hidden', r !== 'Admin');
+            onSnapshot(doc(db, "users", user.uid), async (snap) => {
+                userData = snap.data();
+                document.getElementById('authPage').classList.add('hidden');
+                document.getElementById('mainHeader').classList.remove('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('userRankLabel').innerText = userData.role;
+                
+                const r = userData.role;
+                document.getElementById('nav-reports').classList.toggle('hidden', r === 'User');
+                document.getElementById('nav-admin').classList.toggle('hidden', r !== 'Admin');
+                document.getElementById('nav-activation').classList.toggle('hidden', r === 'User');
+                document.getElementById('addQuestionBtn').classList.toggle('hidden', !['Admin', 'Management', 'Support'].includes(r));
 
-            // Set Profile
-            document.getElementById('setU').innerText = userData.u;
-            document.getElementById('setE').innerText = userData.e;
-            document.getElementById('setR').innerText = userData.role;
-            document.getElementById('setD').innerText = userData.discordId;
-
-            // Listeners
-            onSnapshot(collection(db, "users", user.uid, "counters"), renderCounters);
-            onSnapshot(query(collection(db, "users", user.uid, "notes"), orderBy("createdAt", "desc")), renderNotes);
-            onSnapshot(query(collection(db, "global_quiz"), orderBy("createdAt", "desc")), renderQuiz);
-            onSnapshot(query(collection(db, "users", user.uid, "stats"), orderBy("timestamp", "desc")), (s) => {
-                const c = document.getElementById('statsContainer'); c.innerHTML = '';
-                s.forEach(doc => {
-                    const st = doc.data();
-                    c.innerHTML += `<div class="card" style="font-size:0.8rem; background:#0b0e14;">
-                        <div style="display:flex; justify-content:space-between;"><b>📅 ${st.date}</b> <span style="cursor:pointer; color:var(--danger)" onclick="delStat('${doc.id}')">🗑️</span></div>
-                        <p>${st.content}</p>
-                    </div>`;
-                });
+                document.getElementById('setU').innerText = userData.u; document.getElementById('setE').innerText = userData.e;
+                document.getElementById('setR').innerText = userData.role; document.getElementById('setD').innerText = userData.discordId;
             });
 
+            onSnapshot(collection(db, "users", user.uid, "counters"), renderCounters);
+            onSnapshot(query(collection(db, "global_quiz"), orderBy("createdAt", "desc")), renderQuiz);
+            onSnapshot(doc(db, "system_notices", "current"), (s) => {
+                const bar = document.getElementById('globalNoticeBar');
+                if(s.exists() && s.data().expiry > Date.now()) { bar.innerText = s.data().text; bar.style.display = 'block'; }
+                else bar.style.display = 'none';
+            });
+            onSnapshot(query(collection(db, "users", user.uid, "stats"), orderBy("timestamp", "desc")), (s) => {
+                const c = document.getElementById('statsContainer'); c.innerHTML = '';
+                s.forEach(doc => { c.innerHTML += `<div class="card" style="font-size:0.8rem; background:#0b0e14;"><b>📅 ${doc.data().date}</b><p>${doc.data().content}</p></div>`; });
+            });
             nav('counter');
         } else {
             document.getElementById('authPage').classList.remove('hidden');
@@ -617,7 +587,6 @@
             document.getElementById('mainContent').classList.add('hidden');
         }
     });
-
 </script>
 </body>
 </html>
