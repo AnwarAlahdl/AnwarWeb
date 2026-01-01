@@ -246,6 +246,17 @@
     let curUser = null;
     let userData = null;
 
+    // بيانات الريبورتات التي تم إضافتها
+    const repData = {
+        reportr: ["يرجى شرح مشكلتك لكي يتم خدمتك", "توجه للدعم الفني مع مايثبت ذلك", "سيتم خدمتك الان", "هل تم خدمتك بالشكل المطلوب؟", "سيتم التاكد من الموضوع , كذللك احتياطًا يرجى منك حفظ تصويرك اخر 20 دقيقه في حال الاحتياج له سيتم استدعائك"],
+        summon: ["استدعاء يخص المراقبة الدورية توجه للدعم مع تصوير 20 دقيقة", "احفظ تصوير اخر 20 دقيقه من الان وبعد الانتهاء من السيناريو توجه لدعم الفني مباشره", "استدعاء توجه للدعم الفني مع تصوير اخر 20 دقيقه"],
+        steam: ["الرجاء منك تغيير اسم ستيمك وفايف ام ويكون مطابق لاسم الدسكورد الخاص بك , وعدم تسميته ب اسم عربي او ارقام او زخرفة .. ادارة مستري تاون تتمنى لك يوم ممتع"],
+        clothes: ["يجب عليك لبس مناسب للمكان و تطبيق الاربي المناسب للمكان", "يجب عليك تغيير لبسك و مواكبة الأربي بإرتداء لبس مناسب لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع", "يجب عليك لبس حذاء لتجنب المحاسبة الادارية , ادارة مستري تتمنى لك يوم ممتع", "يجب عليك تغيير لبسك و عدم مخالفة تعميم الملابس لتجنب المحاسبة الادارية", "يرجى منك التوجه لاقرب محل ملابس و تغير الحزام بسبب انه خاص للعساكر فقط و اداره ميستري تاون تتمني لك وقتا ممتعا", "يجب عليك تعديل ملابسك لتتناسب مع وظيفتك، لتجنب المحاسبة الإدارية"],
+        rp: ["يجب عليك تقدير موقفك في اي حالة كنت متواجد فيها وقياسها بالحياة الواقعيه, وادارة مستري تاون تتمنى لك يوم ممتع", "يجب عليك تقدير موقفك وتقمص شخصية المصاب وقياسها بالحياة الواقعيه .ادارة مستري تاون تتمنى لك يوم ممتع", "يمنع منعا باتا الخروج عن الرول بلاي او التلميح خارج الار بي لتجنب المحاسبة الادارية", "يجب عليك ايقاف مركبتك بالشكل المناسب في المناطق الامنة تجنبا للمحاسبة الادارية , ادارة ميستري تاون تتمنى لك يوما ممتعا"],
+        gangs: ["يمنع منعاً باتاً القيام بأي أعمال (التقديح والاسلوب السيء) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنباً للمحاسبة الادارية ، وادارة مستري تاون تتمنى لك وقتاً ممتعاً", "يمنع منعاً باتا التخريم او اطلاق النار خلف الجدران لتجنب المحاسبة الادارية", "يمنع اعطاء كول والتكلم باريحيه وانت مسقط , ويجب عليك تقمص دور المصاب , تجنبا من المحاسبة الادارية", "عزيزي اللاعب يجب عليك التخطيط قبل بدء السرقة ومع التأكد من العدد المشاكرين بالسيناريو , ادارة مستري تتمنى لك يوم ممتع", "عزيزي المواطن , للتذكير يمنع كلبشة شخص بدون رفع اليد ويجب عليك الانتظار , خلاف ذالك بيتم محاسبتك بمحاسبة اداريا صارمه", "يجب عليك تقدير قيمة مركبتك والقيادة بشكل سليم و تجنب النقزات الغير واقعية, وتقدير حياتك وعدم صدم الاخريين , ادارة مستري تاون تتمنى لك يومأ ممتعأ", "يمنع الحلف باي طريقة كانت ويجب عليك تقمص الحياة الواقعيه وابعاد امور الدين بشكل عام تجنباً للمحاسبة الاداريه، وادارة مستري تاون تتمنى لك وقتاً ممتعاً", "يجب ان يكون التهديد بشكل مباشر و يمنع التهديد من داخل المركبة"],
+        general: ["يجب عليك طلب ومسعف والانتظار , ويمنع نقل المسقط بدون طلب مسعف , خلاف ذلك بيتم محاسبتك اداريًا", "يمنع منعًا باتًا معالجة شخص في حال تواجد المسعفين لتجنب المحاسبة الادارية", "في حال إزالة اربع من اطارات السيارة يمنع استكمال القيادة بها", "يمنع حمل اللاعب اثناء ركوب الدباب ايضًا المركبة", "يمنع إرتداء او إستعمال اي خوذة اثناء مشاركتك في اي إطلاق ناري", "يمنع الكذب بالمصطلحات الاتية ( سحر او باخذ حبة او صداع والخ ) .. يعرضك للمحاسبة الادارية", "يمنع منعًا باتًا القيام بأي أعمال ( التقديح والاسلوب السيء ) من العدم ويمنع محاولة افتعال الفايت بدون سبب مقنع تجنبًا للمحاسبة الادارية .. إدارة ميستري تاون تتمنى لك يومًا ممتعًا", "يمنع عليك تكرار البلاغات والسبام بالبلاغات العسكرية او الصحة , في حال تكرارها سيتم محاسبتك اداريًا"]
+    };
+
     // --- Modal System ---
     window.showAlert = (title, msg, type = 'ok', onConfirm = null, customHtml = null) => {
         document.getElementById('modalTitle').innerText = title;
@@ -287,7 +298,7 @@
         document.getElementById('navActivation').classList.toggle('hidden', !canActivate);
         document.getElementById('navReports').classList.toggle('hidden', !['Admin', 'Managment', 'Support'].includes(role));
         document.getElementById('navAdmin').classList.toggle('hidden', role !== 'Admin');
-        document.getElementById('navAnnounce').classList.toggle('hidden', !== 'Admin'));
+        document.getElementById('navAnnounce').classList.toggle('hidden', role !== 'Admin');
         loadRepCategories();
     }
 
@@ -341,17 +352,14 @@
         ['opt1','opt2','opt3','opt4','opt5','opt6'].forEach(id => document.getElementById(id).value = '');
     };
 
-    // التعديل هنا: وظيفة اختيار الإجابة تدعم الاختيار المتعدد
     window.selectAnswer = (btn, isBoolean = false, status = null) => {
         if (isBoolean) {
-            // في حالة صح/خطأ، نسمح باختيار واحد فقط كما في السابق
             const parent = btn.parentElement;
             parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected', 'active-success', 'active-danger', 'active-warn'));
             if(status === 'correct') btn.classList.add('active-success', 'selected');
             if(status === 'wrong') btn.classList.add('active-danger', 'selected');
             if(status === 'warn') btn.classList.add('active-warn', 'selected');
         } else {
-            // في حالة خيارات متعددة، نقوم بتبديل (Toggle) الاختيار بدون حذف البقية
             btn.classList.toggle('selected');
         }
     };
@@ -400,7 +408,6 @@
                 if(q.type === 'boolean') {
                     btns = `<button class="status-btn" onclick="selectAnswer(this, true, 'correct')">✅ صح</button><button class="status-btn" onclick="selectAnswer(this, true, 'wrong')">❌ خطأ</button><button class="status-btn" onclick="selectAnswer(this, true, 'warn')">⚠️ تنبيه</button>`;
                 } else {
-                    // التعديل هنا ليدعم الضغط المتعدد
                     btns = q.opts.map(o => `<button class="status-btn" onclick="selectAnswer(this, false)">${o}</button>`).join('');
                 }
                 list.innerHTML += `<div class="card"><b>${q.text}</b> <span style="font-size:0.7rem; color:var(--primary)">(${q.type==='boolean'?'صح/خطأ':'اختيار متعدد'})</span><div class="status-btns">${btns}</div><button class="btn btn-danger" style="margin-top:10px; padding:2px; font-size:0.7rem" onclick="delGen('activation_questions', '${d.id}')">حذف السؤال</button></div>`;
@@ -482,26 +489,81 @@
         });
     }
 
+    // --- نظام الريبورتات المحدث ---
     window.loadRepCategories = () => {
         const sel = document.getElementById('repCat'); if(!sel) return;
-        sel.innerHTML = '<option value="">-- اختر التصنيف --</option><option value="general">عامة</option>';
+        sel.innerHTML = '<option value="">-- اختر التصنيف --</option>';
+        const cats = {
+            reportr: "بلاغات عامة",
+            summon: "استدعاءات",
+            steam: "تعديل ستيم",
+            clothes: "ملابس",
+            rp: "رول بلاي",
+            gangs: "عصابات",
+            general: "قوانين عامة"
+        };
+        for (let key in repData) {
+            sel.innerHTML += `<option value="${key}">${cats[key] || key}</option>`;
+        }
     };
+
     window.loadRepOptions = () => {
-        const sub = document.getElementById('repSub'); sub.innerHTML = '<option value="سيتم خدمتك">سيتم خدمتك</option>';
+        const cat = document.getElementById('repCat').value;
+        const sub = document.getElementById('repSub');
+        sub.innerHTML = '';
+        if (cat && repData[cat]) {
+            repData[cat].forEach(txt => {
+                sub.innerHTML += `<option value="${txt}">${txt.substring(0, 50)}...</option>`;
+            });
+        }
     };
+
     window.copyReport = async (mode) => {
+        const id = document.getElementById('repId').value;
+        const disc = document.getElementById('repDiscord').value;
         const msg = document.getElementById('repSub').value;
-        await navigator.clipboard.writeText(msg); showAlert("تم", "نسخ بنجاح");
+        const cat = document.getElementById('repCat').value;
+
+        if (!msg) return showAlert("تنبيه", "الرجاء اختيار رسالة");
+
+        let text = "";
+        if (mode === 'in') {
+            // نسخ داخل السيرفر (يدعم أمر reportr)
+            text = (cat === 'reportr') ? `/reportr ${id} ${msg}` : msg;
+        } else {
+            // نسخ خارج السيرفر (منشن ديسكورد)
+            text = `${msg} \n <@${disc}>`;
+        }
+
+        try {
+            await navigator.clipboard.writeText(text);
+            showAlert("تم النسخ ✅", "بنجاح");
+        } catch (e) {
+            showAlert("خطأ", "فشل النسخ التلقائي، جرب يدوياً");
+        }
     };
+
     window.addNote = async () => {
         const t = document.getElementById('noteInput').value;
         if (t) await addDoc(collection(db, "users", curUser.uid, "notes"), { t, createdAt: Date.now() });
         document.getElementById('noteInput').value = '';
     };
 
+    window.sendAnnouncement = async () => {
+        const text = document.getElementById('annText').value;
+        const hours = parseFloat(document.getElementById('annDuration').value);
+        if(!text || !hours) return;
+        try {
+            await setDoc(doc(db, "system_notices", "current"), {
+                text,
+                expiresAt: Date.now() + (hours * 60 * 60 * 1000),
+                createdAt: Date.now()
+            });
+            showAlert("تم", "تم إرسال التعميم بنجاح");
+            document.getElementById('annText').value = '';
+        } catch(e) { showAlert("خطأ", "فشل الإرسال"); }
+    };
+
 </script>
 </body>
 </html>
-
-
-
