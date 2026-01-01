@@ -82,8 +82,8 @@
         
         /* Quiz System Styles */
         .quiz-item { background: #0b0e14; padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--border); text-align: right; }
-        .option-tag { display: inline-block; padding: 5px 12px; background: var(--border); border-radius: 8px; font-size: 0.8rem; margin: 4px; border: 1px solid transparent; }
-        .option-tag.correct { border-color: var(--success); color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .option-tag { display: inline-block; padding: 5px 12px; background: var(--border); border-radius: 8px; font-size: 0.8rem; margin: 4px; border: 1px solid transparent; cursor: pointer; }
+        .option-tag.selected { border-color: var(--primary); color: var(--primary); background: rgba(79, 70, 229, 0.1); }
 
         .hidden { display: none !important; }
 
@@ -210,7 +210,7 @@
             </div>
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>❓ قائمة الأسئلة</h3>
+                    <h3>❓ قائمة الأسئلة (الخاصة بي)</h3>
                     <button class="btn btn-primary btn-sm hidden" id="addQuestionBtn" onclick="openAddQuestionModal()">إضافة سؤال +</button>
                 </div>
                 <div id="quizContainer" style="margin-top: 15px;"></div>
@@ -359,7 +359,7 @@
 
     window.logout = () => showModal("تسجيل الخروج", "هل أنت متأكد؟", "confirm", () => signOut(auth).then(()=>location.reload()));
 
-    // --- Counters ---
+    // --- Counters & Stats ---
     window.addCounter = async () => {
         const n = document.getElementById('counterName').value, g = document.getElementById('counterGoal').value;
         if(!n || !g) return;
@@ -393,7 +393,7 @@
     window.updateCount = async (id, v) => v >= 0 && await updateDoc(doc(db, "users", auth.currentUser.uid, "counters", id), { current: v });
     window.confirmDelCounter = (id) => showModal("حذف", "حذف العداد؟", "confirm", () => deleteDoc(doc(db, "users", auth.currentUser.uid, "counters", id)));
     
-    window.transferToStats = () => showModal("نقل البيانات", "تصفير العدادات ونقلها للسجل؟", "confirm", async () => {
+    window.transferToStats = () => showModal("نقل البيانات", "تصفير العدادات ونقلها للإحصائيات؟", "confirm", async () => {
         const q = await getDocs(collection(db, "users", auth.currentUser.uid, "counters"));
         if(q.empty) return;
         let summary = [];
@@ -404,6 +404,15 @@
         });
         await addDoc(collection(db, "users", auth.currentUser.uid, "stats"), { content: summary.join(" | "), timestamp: Date.now(), date: new Date().toLocaleString('ar-EG') });
         await batch.commit();
+    });
+
+    window.editStat = (id, currentText) => {
+        showModal("تعديل اسم الإحصائية", "", "prompt", async (newVal) => {
+            if(newVal) await updateDoc(doc(db, "users", auth.currentUser.uid, "stats", id), { date: newVal });
+        });
+    };
+    window.delStat = (id) => showModal("حذف", "هل تريد حذف هذا السجل من الإحصائيات؟", "confirm", async () => {
+        await deleteDoc(doc(db, "users", auth.currentUser.uid, "stats", id));
     });
 
     // --- Reports ---
@@ -435,7 +444,7 @@
         navigator.clipboard.writeText(txt).then(()=>showModal("تم", "تم النسخ بنجاح"));
     };
 
-    // --- Activation Quiz ---
+    // --- Activation Quiz (Private for each user) ---
     window.openAddQuestionModal = () => {
         const html = `
             <input type="text" id="qTitle" placeholder="نص السؤال">
@@ -443,33 +452,22 @@
                 <option value="boolean">صح / خطأ</option>
                 <option value="multiple">اختيار متعدد (6 خيارات)</option>
             </select>
-            <div id="boolAns">
-                <label>الإجابة الصحيحة:</label>
-                <select id="qBoolCorrect"><option value="صح">صح</option><option value="خطأ">خطأ</option></select>
-            </div>
             <div id="multAns" class="hidden">
                 <input type="text" id="opt1" placeholder="الخيار 1"><input type="text" id="opt2" placeholder="الخيار 2">
                 <input type="text" id="opt3" placeholder="الخيار 3"><input type="text" id="opt4" placeholder="الخيار 4">
                 <input type="text" id="opt5" placeholder="الخيار 5"><input type="text" id="opt6" placeholder="الخيار 6">
-                <label>رقم الخيار الصحيح (1-6):</label>
-                <input type="number" id="qMultCorrect" min="1" max="6" value="1">
             </div>
         `;
-        showModal("إضافة سؤال", html, "confirm", async () => {
+        showModal("إضافة سؤال جديد", html, "confirm", async () => {
             const title = document.getElementById('qTitle').value, type = document.getElementById('qType').value;
-            let options = [], correct = "";
-            if(type === 'boolean') { options = ['صح', 'خطأ']; correct = document.getElementById('qBoolCorrect').value; }
-            else { 
-                for(let i=1; i<=6; i++) { let v = document.getElementById('opt'+i).value; if(v) options.push(v); }
-                correct = options[parseInt(document.getElementById('qMultCorrect').value)-1] || options[0];
-            }
-            if(title) await addDoc(collection(db, "global_quiz"), { title, type, options, correct, createdAt: Date.now() });
+            let options = [];
+            if(type === 'boolean') { options = ['صح', 'خطأ']; }
+            else { for(let i=1; i<=6; i++) { let v = document.getElementById('opt'+i).value; if(v) options.push(v); } }
+            if(title) await addDoc(collection(db, "users", auth.currentUser.uid, "private_quiz"), { title, type, options, createdAt: Date.now() });
         });
     };
-    window.toggleQType = (v) => {
-        document.getElementById('boolAns').classList.toggle('hidden', v !== 'boolean');
-        document.getElementById('multAns').classList.toggle('hidden', v !== 'multiple');
-    };
+    window.toggleQType = (v) => { document.getElementById('multAns').classList.toggle('hidden', v !== 'multiple'); };
+    
     window.renderQuiz = (snap) => {
         const cont = document.getElementById('quizContainer'); cont.innerHTML = '';
         snap.forEach(d => {
@@ -478,16 +476,17 @@
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:start;">
                     <b>${q.title}</b>
-                    ${['Admin', 'Management', 'Support'].includes(userData.role) ? `<span onclick="delQuiz('${d.id}')" style="cursor:pointer; color:var(--danger)">🗑️</span>` : ''}
+                    <span onclick="delQuiz('${d.id}')" style="cursor:pointer; color:var(--danger)">🗑️</span>
                 </div>
-                <div style="margin-top:10px;">
-                    ${q.options.map(o => `<span class="option-tag ${o === q.correct ? 'correct' : ''}">${o}</span>`).join('')}
+                <div style="margin-top:10px;" id="q-${d.id}">
+                    ${q.options.map(o => `<span class="option-tag" onclick="this.classList.toggle('selected')">${o}</span>`).join('')}
                 </div>
             `;
             cont.appendChild(div);
         });
     };
-    window.delQuiz = (id) => showModal("حذف", "حذف السؤال؟", "confirm", () => deleteDoc(doc(db, "global_quiz", id)));
+    window.delQuiz = (id) => showModal("حذف", "حذف السؤال نهائياً؟", "confirm", () => deleteDoc(doc(db, "users", auth.currentUser.uid, "private_quiz", id)));
+    
     window.calculateAge = () => {
         const b = new Date(document.getElementById('birthDate').value);
         const age = Math.floor((new Date() - b) / 31557600000);
@@ -570,7 +569,7 @@
             });
 
             onSnapshot(collection(db, "users", user.uid, "counters"), renderCounters);
-            onSnapshot(query(collection(db, "global_quiz"), orderBy("createdAt", "desc")), renderQuiz);
+            onSnapshot(query(collection(db, "users", user.uid, "private_quiz"), orderBy("createdAt", "desc")), renderQuiz);
             onSnapshot(doc(db, "system_notices", "current"), (s) => {
                 const bar = document.getElementById('globalNoticeBar');
                 if(s.exists() && s.data().expiry > Date.now()) { bar.innerText = s.data().text; bar.style.display = 'block'; }
@@ -578,7 +577,20 @@
             });
             onSnapshot(query(collection(db, "users", user.uid, "stats"), orderBy("timestamp", "desc")), (s) => {
                 const c = document.getElementById('statsContainer'); c.innerHTML = '';
-                s.forEach(doc => { c.innerHTML += `<div class="card" style="font-size:0.8rem; background:#0b0e14;"><b>📅 ${doc.data().date}</b><p>${doc.data().content}</p></div>`; });
+                s.forEach(doc => { 
+                    const data = doc.data();
+                    c.innerHTML += `
+                    <div class="card" style="font-size:0.8rem; background:#0b0e14;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <b>📅 ${data.date}</b>
+                            <div style="display:flex; gap:10px;">
+                                <span style="cursor:pointer; color:var(--primary)" onclick="editStat('${doc.id}', '${data.date}')">✏️</span>
+                                <span style="cursor:pointer; color:var(--danger)" onclick="delStat('${doc.id}')">🗑️</span>
+                            </div>
+                        </div>
+                        <p>${data.content}</p>
+                    </div>`; 
+                });
             });
             nav('counter');
         } else {
