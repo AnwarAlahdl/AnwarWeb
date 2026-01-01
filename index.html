@@ -79,6 +79,10 @@
         .option-tag { flex: 1; padding: 12px 12px; background: var(--border); border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
         
         .option-tag.selected { border-color: var(--primary); color: white; background: var(--primary); }
+        
+        /* كلاسات التلوين عند التحقق */
+        .option-tag.is-correct { background-color: var(--success) !important; border-color: var(--success) !important; color: white !important; }
+        .option-tag.is-wrong { background-color: var(--danger) !important; border-color: var(--danger) !important; color: white !important; }
 
         .section-result { background: var(--border); padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center; font-weight: bold; border: 1px dashed var(--primary); font-size: 0.9rem; }
 
@@ -101,7 +105,6 @@
         .status-btn.wrong { border-color: var(--danger); color: var(--danger); }
         .status-btn.wrong.active { background: var(--danger); color: white; }
 
-        /* ستايل اسم طالب الترقية */
         .requested-rank-name { color: var(--admin) !important; font-weight: 900 !important; text-shadow: 0 0 5px rgba(245, 158, 11, 0.3); }
     </style>
 </head>
@@ -482,16 +485,44 @@
     window.checkAllInContainer = (contId) => {
         const container = document.getElementById(contId);
         let correctCount = 0, wrongCount = 0, unhandledCount = 0;
+        
         container.querySelectorAll('.quiz-item').forEach(item => {
+            const allTags = item.querySelectorAll('.option-tag');
             const selectedTags = item.querySelectorAll('.option-tag.selected');
             const correctIndices = JSON.parse(item.dataset.correctIndices);
+            
+            // تصفير الألوان السابقة
+            allTags.forEach(t => t.classList.remove('is-correct', 'is-wrong'));
+
             if(selectedTags.length === 0) {
                 unhandledCount++;
             } else {
                 const selectedIndices = Array.from(selectedTags).map(t => parseInt(t.dataset.idx));
                 const isCorrect = correctIndices.length === selectedIndices.length && 
                                  correctIndices.every(idx => selectedIndices.includes(idx));
-                if(isCorrect) correctCount++; else wrongCount++;
+                
+                if(isCorrect) {
+                    correctCount++;
+                    // تلوين المختار صحيح بالأخضر
+                    selectedTags.forEach(t => t.classList.add('is-correct'));
+                } else {
+                    wrongCount++;
+                    // تلوين الاختيارات الخاطئة التي اختارها المستخدم بالأحمر
+                    selectedTags.forEach(t => {
+                        const idx = parseInt(t.dataset.idx);
+                        if (!correctIndices.includes(idx)) {
+                            t.classList.add('is-wrong');
+                        } else {
+                            t.classList.add('is-correct');
+                        }
+                    });
+                    // تلوين الإجابات الصحيحة التي لم يتم اختيارها بالأخضر للتوضيح
+                    allTags.forEach(t => {
+                        if (correctIndices.includes(parseInt(t.dataset.idx))) {
+                            t.classList.add('is-correct');
+                        }
+                    });
+                }
             }
         });
         const resultDivId = contId === 'quizContainer' ? 'questionsResult' : 'scenariosResult';
@@ -667,7 +698,6 @@
     };
     window.deleteNotice = async () => await deleteDoc(doc(db, "system_notices", "current"));
     
-    // --- تحديث لوحة الإدارة (معدلة) ---
     window.refreshAdminList = async () => {
         const container = document.getElementById('adminUserTable');
         container.innerHTML = `<p style="text-align: center; color: var(--primary); padding: 20px;">جاري تحميل القائمة... ⏳</p>`;
@@ -688,7 +718,6 @@
             
             snap.forEach(d => {
                 const u = d.data();
-                // تمييز الاسم إذا كان لديه طلب ترقية نشط
                 const nameClass = u.requestedRank ? 'requested-rank-name' : '';
                 const starIcon = u.requestedRank ? ' ⭐' : '';
 
@@ -748,7 +777,6 @@
 
     window.updateUserRole = async (uid, r) => {
         try {
-            // عند تغيير الرتبة نقوم بإلغاء حالة "طلب ترقية" تلقائياً
             await updateDoc(doc(db, "users", uid), { role: r, requestedRank: false });
         } catch (e) {
             showModal("خطأ", "لا تملك صلاحية تعديل الرتبة");
@@ -820,7 +848,6 @@
                 document.getElementById('setR').innerText = userData.role; 
                 document.getElementById('setD').innerText = userData.discordId || '-';
 
-                // ملاحظة: حذفنا refreshAdminList() التلقائي من هنا ليتم التحديث يدوياً فقط
                 if(!pendingAuthUser) completeLogin(user);
             });
 
@@ -856,5 +883,4 @@
 </script>
 </body>
 </html>
-
 
