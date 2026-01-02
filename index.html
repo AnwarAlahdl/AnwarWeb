@@ -873,7 +873,7 @@
             document.getElementById('setR').innerText = userData.role;
             document.getElementById('setD').innerText = userData.discordId || 'N/A';
             
-            const isAdmin = ['Admin', 'Management'].includes(userData.role);
+            const isAdmin = ['Admin'].includes(userData.role);
             if(isAdmin) { 
                 document.getElementById('nav-admin').classList.remove('hidden'); 
                 document.getElementById('addQuestionBtn').classList.remove('hidden'); 
@@ -922,3 +922,4 @@
 
 </body>
 </html>
+
