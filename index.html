@@ -80,9 +80,9 @@
         
         .option-tag.selected { border-color: var(--primary); color: white; background: var(--primary); }
         
-        /* كلاسات التلوين عند التحقق */
         .option-tag.is-correct { background-color: var(--success) !important; border-color: var(--success) !important; color: white !important; }
         .option-tag.is-wrong { background-color: var(--danger) !important; border-color: var(--danger) !important; color: white !important; }
+        .option-tag.should-be-selected { border: 2px solid var(--success) !important; }
 
         .section-result { background: var(--border); padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center; font-weight: bold; border: 1px dashed var(--primary); font-size: 0.9rem; }
 
@@ -240,7 +240,7 @@
                     </div>
                     <div id="scenariosContainer" style="margin-top: 15px;"></div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button class="btn btn-success" style="flex:2" onclick="checkAllInContainer('scenariosContainer')">تحقق من إجابات السيناريوهات ✅</button>
+                        <button class="btn btn-success" style="flex:2" onclick="checkScenariosLogic()">تحقق من إجابات السيناريوهات ✅</button>
                         <button class="btn btn-ghost" style="flex:1" onclick="resetAndShuffle('scenariosContainer')">إعادة تعيين 🔄</button>
                     </div>
                     <div id="scenariosResult" class="section-result hidden"></div>
@@ -253,7 +253,7 @@
                 </div>
                 <div id="quizContainer" style="margin-top: 15px;"></div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn btn-primary" style="flex:2" onclick="checkAllInContainer('quizContainer')">تحقق من إجابات الأسئلة ✅</button>
+                    <button class="btn btn-primary" style="flex:2" onclick="checkQuestionsLogic()">تحقق من إجابات الأسئلة ✅</button>
                     <button class="btn btn-ghost" style="flex:1" onclick="resetAndShuffle('quizContainer')">إعادة تعيين 🔄</button>
                 </div>
                 <div id="questionsResult" class="section-result hidden"></div>
@@ -460,7 +460,9 @@
         
         data.forEach(q => {
             const div = document.createElement('div'); div.className = 'quiz-item';
-            div.dataset.correctIndices = JSON.stringify(q.correctIndices || [q.correctIndex]); 
+            div.dataset.correctIndices = JSON.stringify(q.correctIndices || [q.correctIndex]);
+            div.dataset.qType = q.type || 'multi'; 
+            
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:start;">
                     <b>${q.title}</b>
@@ -469,7 +471,7 @@
                 <div class="options-container" style="margin-top:10px;">
                     ${q.options.map((o, idx) => `
                         <div class="option-row">
-                            <span class="option-tag" data-idx="${idx}" onclick="toggleOptionSelection(this)">${o}</span>
+                            <span class="option-tag" data-idx="${idx}" onclick="handleOptionClick(this)">${o}</span>
                         </div>
                     `).join('')}
                 </div>
@@ -478,57 +480,108 @@
         });
     };
 
-    window.toggleOptionSelection = (el) => {
-        el.classList.toggle('selected');
+    window.handleOptionClick = (el) => {
+        const quizItem = el.closest('.quiz-item');
+        const container = quizItem.parentElement;
+        const qType = quizItem.dataset.qType;
+
+        if(container.id === 'quizContainer' && qType === 'boolean') {
+            quizItem.querySelectorAll('.option-tag').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+        } else {
+            el.classList.toggle('selected');
+        }
     };
 
-    window.checkAllInContainer = (contId) => {
-        const container = document.getElementById(contId);
+    window.checkQuestionsLogic = () => {
+        const container = document.getElementById('quizContainer');
         let correctCount = 0, wrongCount = 0, unhandledCount = 0;
-        
+
         container.querySelectorAll('.quiz-item').forEach(item => {
-            const allTags = item.querySelectorAll('.option-tag');
+            const correctIndices = JSON.parse(item.dataset.correctIndices).map(Number);
+            const tags = item.querySelectorAll('.option-tag');
             const selectedTags = item.querySelectorAll('.option-tag.selected');
-            const correctIndices = JSON.parse(item.dataset.correctIndices);
-            
-            // تصفير الألوان السابقة
-            allTags.forEach(t => t.classList.remove('is-correct', 'is-wrong'));
+            const selectedIndices = Array.from(selectedTags).map(t => parseInt(t.dataset.idx));
+
+            tags.forEach(t => t.classList.remove('is-correct', 'is-wrong'));
 
             if(selectedTags.length === 0) {
                 unhandledCount++;
             } else {
-                const selectedIndices = Array.from(selectedTags).map(t => parseInt(t.dataset.idx));
-                const isCorrect = correctIndices.length === selectedIndices.length && 
-                                 correctIndices.every(idx => selectedIndices.includes(idx));
-                
-                if(isCorrect) {
+                const isPerfect = (selectedIndices.length === correctIndices.length) && 
+                                   selectedIndices.every(val => correctIndices.includes(val));
+
+                if(isPerfect) {
                     correctCount++;
-                    // تلوين المختار صحيح بالأخضر
                     selectedTags.forEach(t => t.classList.add('is-correct'));
                 } else {
                     wrongCount++;
-                    // تلوين الاختيارات الخاطئة التي اختارها المستخدم بالأحمر
                     selectedTags.forEach(t => {
                         const idx = parseInt(t.dataset.idx);
-                        if (!correctIndices.includes(idx)) {
-                            t.classList.add('is-wrong');
-                        } else {
-                            t.classList.add('is-correct');
-                        }
-                    });
-                    // تلوين الإجابات الصحيحة التي لم يتم اختيارها بالأخضر للتوضيح
-                    allTags.forEach(t => {
-                        if (correctIndices.includes(parseInt(t.dataset.idx))) {
-                            t.classList.add('is-correct');
-                        }
+                        if(correctIndices.includes(idx)) t.classList.add('is-correct');
+                        else t.classList.add('is-wrong');
                     });
                 }
             }
         });
-        const resultDivId = contId === 'quizContainer' ? 'questionsResult' : 'scenariosResult';
-        const resDiv = document.getElementById(resultDivId);
+
+        const resDiv = document.getElementById('questionsResult');
         resDiv.classList.remove('hidden');
-        resDiv.innerHTML = `( عدد الإجابات الصحيحة ✅ : ${correctCount} ) ( عدد الإجابات الخاطئه ❌ : ${wrongCount} ) ( الأسئلة التي لم يتم حلها 🙂 : ${unhandledCount} )`;
+        resDiv.innerHTML = `
+            <span style="color: var(--success)">( عدد الإجابات الصحيحة ✅ : ${correctCount} )</span><br>
+            <span style="color: var(--danger)">( عدد الإجابات الخاطئة ❌ : ${wrongCount} )</span><br>
+            <span style="color: var(--text-muted)">( الأسئلة التي لم يتم حلها 🙂 : ${unhandledCount} )</span>
+        `;
+        showModal("تم الفحص", "تم حساب نتائج قسم الأسئلة.");
+    };
+
+    window.checkScenariosLogic = () => {
+        const container = document.getElementById('scenariosContainer');
+        let totalCorrectOptions = 0;
+        let totalWrongOptions = 0;
+        let unhandledCount = 0;
+
+        container.querySelectorAll('.quiz-item').forEach(item => {
+            const correctIndices = JSON.parse(item.dataset.correctIndices).map(Number);
+            const tags = item.querySelectorAll('.option-tag');
+            const selectedIndices = Array.from(item.querySelectorAll('.option-tag.selected')).map(t => parseInt(t.dataset.idx));
+
+            tags.forEach(t => t.classList.remove('is-correct', 'is-wrong', 'should-be-selected'));
+
+            if (selectedIndices.length === 0) {
+                unhandledCount++;
+            } else {
+                tags.forEach(t => {
+                    const idx = parseInt(t.dataset.idx);
+                    const isSelected = t.classList.contains('selected');
+                    const isCorrect = correctIndices.includes(idx);
+
+                    if (isCorrect) {
+                        if (isSelected) {
+                            t.classList.add('is-correct');
+                            totalCorrectOptions++;
+                        } else {
+                            t.classList.add('should-be-selected');
+                            totalWrongOptions++;
+                        }
+                    } else {
+                        if (isSelected) {
+                            t.classList.add('is-wrong');
+                            totalWrongOptions++;
+                        }
+                    }
+                });
+            }
+        });
+
+        const resDiv = document.getElementById('scenariosResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = `
+            <span style="color: var(--success)">( عدد الإجابات الصحيحة ✅ : ${totalCorrectOptions} )</span><br>
+            <span style="color: var(--danger)">( عدد الإجابات الخاطئة ❌ : ${totalWrongOptions} )</span><br>
+            <span style="color: var(--text-muted)">( سيناريوهات لم يتم لمسها 🙂 : ${unhandledCount} )</span>
+        `;
+        showModal("تم الفحص", "تم جرد جميع الخيارات في السيناريوهات.");
     };
 
     window.resetAndShuffle = (contId) => {
@@ -552,7 +605,7 @@
                     <option value="boolean">صح و خطأ</option>
                 </select>
             </div>
-            <input type="text" id="qTitle" placeholder="${isScenario ? 'وصف السينارييو' : 'نص السؤال'}">
+            <input type="text" id="qTitle" placeholder="${isScenario ? 'وصف السيناريو' : 'نص السؤال'}">
             <div id="optionsInputsArea">
                 <div id="multiTypeArea">
                     ${[0,1,2,3].map(i => `
@@ -575,12 +628,14 @@
                 </div>
             </div>
         `;
+        
         window.toggleAddQType = (val) => {
             const mta = document.getElementById('multiTypeArea');
             const bta = document.getElementById('booleanTypeArea');
             if(mta) mta.classList.toggle('hidden', val !== 'multi');
             if(bta) bta.classList.toggle('hidden', val !== 'boolean');
         };
+
         window.toggleStatusBtn = (idx) => {
             const btn = document.getElementById('btnStatus'+idx);
             if(btn.classList.contains('wrong')) {
@@ -589,12 +644,14 @@
                 btn.classList.remove('correct', 'active'); btn.classList.add('wrong', 'active'); btn.innerText = '❌';
             }
         };
+
         let boolAnswer = null;
         window.setBoolAnswer = (isTrue) => {
             const bC = document.getElementById('boolCorrectBtn'), bW = document.getElementById('boolWrongBtn');
             bC.classList.remove('active'); bW.classList.remove('active');
             if(isTrue) { bC.classList.add('active'); boolAnswer = true; } else { bW.classList.add('active'); boolAnswer = false; }
         };
+
         let extraOptCount = 4;
         window.addNewOptionRow = () => {
             const row = document.createElement('div'); row.className = 'add-q-row';
@@ -603,6 +660,7 @@
             document.getElementById('multiTypeArea').insertBefore(row, document.getElementById('multiTypeArea').lastElementChild);
             extraOptCount++;
         };
+
         showModal(isScenario ? "إضافة سيناريو" : "إضافة سؤال", html, "confirm", async () => {
             const title = document.getElementById('qTitle').value, type = document.getElementById('qType').value;
             let options = [], correctIndices = [];
@@ -616,7 +674,7 @@
                 if(boolAnswer === null) return showModal("خطأ", "يرجى تحديد الإجابة الصحيحة");
             }
             if(title && options.length > 0 && correctIndices.length > 0) {
-                await addDoc(collection(db, targetColl), { title, options, correctIndices, createdAt: Date.now() });
+                await addDoc(collection(db, targetColl), { title, options, correctIndices, type, createdAt: Date.now() });
             }
         });
     };
@@ -678,187 +736,147 @@
         });
     };
 
-    window.copyReport = (mode) => {
-        const id = document.getElementById('repGameID').value, dsc = document.getElementById('repDiscordID').value, sel = document.querySelector('input[name="res"]:checked');
-        if(!id || !sel) return showModal("تنبيه", "أكمل البيانات");
-        const txt = mode === 'in' ? `/reportr ${id} ${sel.value}` : `${sel.value}\n<@${dsc}>`;
-        navigator.clipboard.writeText(txt).then(()=>showModal("تم", "تم النسخ"));
+    window.copyReport = (type) => {
+        const cat = document.getElementById('repCategory').value, id = document.getElementById('repGameID').value || '0', dId = document.getElementById('repDiscordID').value || 'ID';
+        if(!cat) return showModal("خطأ", "اختر تصنيف البلاغ");
+        const txt = type==='in' ? `/reportr ${id} ${cat}` : `📋 **بلاغ جديد**\n🔹 اللاعب: ${id}\n🔹 الديسكورد: <@${dId}>\n🔹 النوع: ${cat}`;
+        navigator.clipboard.writeText(txt).then(() => showModal("نسخ", "تم نسخ البلاغ بنجاح"));
     };
 
     window.calculateAge = () => {
-        const b = new Date(document.getElementById('birthDate').value);
-        const age = Math.floor((new Date() - b) / 31557600000);
-        const res = document.getElementById('ageResult'); res.innerText = (age || 0) + " سنة";
-        res.style.color = age >= 16 ? "var(--success)" : "var(--danger)";
+        const b = document.getElementById('birthDate').value; if(!b) return;
+        const diff = Date.now() - new Date(b).getTime();
+        document.getElementById('ageResult').innerText = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
     };
 
-    window.postNotice = async () => {
-        const txt = document.getElementById('noticeInput').value, hrs = document.getElementById('noticeHours').value;
-        if(txt && hrs) await setDoc(doc(db, "system_notices", "current"), { text: txt, expiry: Date.now() + (hrs * 3600000) });
-    };
-    window.deleteNotice = async () => await deleteDoc(doc(db, "system_notices", "current"));
-    
-    window.refreshAdminList = async () => {
-        const container = document.getElementById('adminUserTable');
-        container.innerHTML = `<p style="text-align: center; color: var(--primary); padding: 20px;">جاري تحميل القائمة... ⏳</p>`;
-        
-        try {
-            const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc")));
-            let h = `
-            <table style="min-width: 800px;">
-                <thead>
-                    <tr>
-                        <th>المستخدم / Discord</th>
-                        <th>الإيميل</th>
-                        <th>الرتبة</th>
-                        <th>التحكم</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            
-            snap.forEach(d => {
-                const u = d.data();
-                const nameClass = u.requestedRank ? 'requested-rank-name' : '';
-                const starIcon = u.requestedRank ? ' ⭐' : '';
-
-                h += `
-                <tr>
-                    <td style="text-align:right;">
-                        <div class="${nameClass}" style="font-weight:bold;">${u.u}${starIcon}</div>
-                        <div style="font-size:0.7rem; color:var(--text-muted)">ID: ${u.discordId || 'غير معروف'}</div>
-                    </td>
-                    <td style="font-size:0.8rem;">${u.e}</td>
-                    <td>
-                        <select onchange="updateUserRole('${d.id}', this.value)" style="padding:5px; width:auto; margin:0;">
-                            <option value="User" ${u.role==='User'?'selected':''}>User</option>
-                            <option value="Support" ${u.role==='Support'?'selected':''}>Support</option>
-                            <option value="Management" ${u.role==='Management'?'selected':''}>Management</option>
-                            <option value="Admin" ${u.role==='Admin'?'selected':''}>Admin</option>
-                        </select>
-                    </td>
-                    <td>
-                        <div style="display:flex; gap:5px; justify-content:center;">
-                            <button class="btn btn-primary btn-sm" onclick="adminEditUserInfo('${d.id}', '${u.u}', '${u.discordId || ''}', '${u.e}')">تعديل ⚙️</button>
-                            <button class="btn btn-danger btn-sm" onclick="adminDelUser('${d.id}')">حذف 🗑️</button>
-                        </div>
-                    </td>
-                </tr>`;
-            });
-            container.innerHTML = h + `</tbody></table>`;
-        } catch (e) {
-            container.innerHTML = `<p style="text-align: center; color: var(--danger); padding: 20px;">فشل في جلب البيانات ❌</p>`;
-            console.error(e);
-        }
-    };
-
-    window.adminEditUserInfo = (uid, oldName, oldDiscord, oldEmail) => {
-        const html = `
-            <label style="display:block; text-align:right; font-size:0.8rem;">اسم المستخدم:</label>
-            <input type="text" id="editU" value="${oldName}">
-            <label style="display:block; text-align:right; font-size:0.8rem; margin-top:10px;">Discord ID:</label>
-            <input type="text" id="editD" value="${oldDiscord}">
-            <label style="display:block; text-align:right; font-size:0.8rem; margin-top:10px;">البريد الإلكتروني:</label>
-            <input type="email" id="editE" value="${oldEmail}">
-        `;
-        showModal(`تعديل بيانات المستخدم`, html, "confirm", async () => {
-            const u = document.getElementById('editU').value;
-            const discordId = document.getElementById('editD').value;
-            const e = document.getElementById('editE').value;
-            if(!u || !e) return showModal("خطأ", "الاسم والإيميل مطلوبان");
+    window.promptUpdate = (field) => {
+        const msg = field === 'username' ? 'اليوزر الجديد' : 'الباسوورد الجديد';
+        showModal(`تعديل ${field}`, `أدخل ${msg}`, "prompt", async (val) => {
+            if(!val) return;
             try {
-                await updateDoc(doc(db, "users", uid), { u, discordId, e }); 
-                showModal("تم", "تم تحديث البيانات بنجاح");
-                refreshAdminList();
-            } catch (err) {
-                showModal("خطأ", "فشل في تحديث البيانات");
-            }
+                if(field === 'username') {
+                    const check = await getDocs(query(collection(db, "users"), where("u", "==", val)));
+                    if(!check.empty) return showModal("خطأ", "اليوزر مستخدم");
+                    await updateDoc(doc(db, "users", auth.currentUser.uid), { u: val });
+                } else {
+                    await updatePassword(auth.currentUser, val);
+                }
+                showModal("تم", "تم التحديث بنجاح");
+            } catch(e) { showModal("خطأ", e.message); }
         });
     };
-
-    window.updateUserRole = async (uid, r) => {
-        try {
-            await updateDoc(doc(db, "users", uid), { role: r, requestedRank: false });
-        } catch (e) {
-            showModal("خطأ", "لا تملك صلاحية تعديل الرتبة");
-        }
-    };
-    window.adminDelUser = (id) => showModal("حذف نهائي", "هل أنت متأكد من حذف هذا الحساب بشكل نهائي؟ لا يمكن التراجع.", "confirm", () => deleteDoc(doc(db, "users", id)).then(refreshAdminList));
 
     window.requestRank = async () => {
-        showModal("طلب ترقية", "هل تريد إرسال طلب ترقية للإدارة؟ سيظهر اسمك بلون مميز لديهم.", "confirm", async () => {
-            try {
-                await updateDoc(doc(db, "users", auth.currentUser.uid), { requestedRank: true });
-                showModal("تم", "تم إرسال طلبك بنجاح ✅");
-            } catch (e) {
-                showModal("خطأ", "فشل في إرسال الطلب");
-            }
+        if(userData.requestedRank) return showModal("تنبيه", "لديك طلب معلق بالفعل");
+        showModal("طلب رتبة", "أدخل الرتبة المطلوبة", "prompt", async (rank) => {
+            if(!rank) return;
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { requestedRank: true, requestedRankName: rank });
+            showModal("تم", "تم إرسال طلبك للإدارة");
         });
     };
 
-    window.promptUpdate = (type) => {
-        showModal(`تعديل ${type}`, "", "prompt", async (val) => {
-            if(!val) return;
-            if(type === 'username') await updateDoc(doc(db, "users", auth.currentUser.uid), { u: val });
-            else if(type === 'password') await updatePassword(auth.currentUser, val);
-        });
-    };
-
-    window.confirmDeleteSelf = () => showModal("⚠️ تحذير", "سيتم حذف حسابك نهائياً من النظام. هل أنت متأكد؟", "confirm", async () => {
-        try {
-            await deleteDoc(doc(db, "users", auth.currentUser.uid));
-            await auth.currentUser.delete();
-            location.reload();
-        } catch (e) {
-            showModal("خطأ", "يرجى تسجيل الدخول مجدداً لتنفيذ هذا الإجراء الحساس.");
-        }
+    window.confirmDeleteSelf = () => showModal("⚠️ حذف الحساب", "سيتم حذف بياناتك نهائياً، هل أنت متأكد؟", "confirm", async () => {
+        await deleteDoc(doc(db, "users", auth.currentUser.uid));
+        auth.currentUser.delete().then(()=>location.reload());
     });
+
+    window.postNotice = async () => {
+        const t = document.getElementById('noticeInput').value, h = document.getElementById('noticeHours').value;
+        if(!t || !h) return;
+        await setDoc(doc(db, "settings", "globalNotice"), { text: t, expiry: Date.now() + (h * 3600000) });
+    };
+    window.deleteNotice = async () => await deleteDoc(doc(db, "settings", "globalNotice"));
+
+    window.refreshAdminList = async () => {
+        const tableArea = document.getElementById('adminUserTable');
+        tableArea.innerHTML = '<p style="text-align:center;">جاري التحميل...</p>';
+        const q = await getDocs(collection(db, "users"));
+        let html = '<table><tr><th>المستخدم</th><th>الإيميل</th><th>Discord ID</th><th>الرتبة</th><th>إجراءات</th></tr>';
+        q.forEach(uDoc => {
+            const u = uDoc.data();
+            const rankStyle = u.requestedRank ? 'class="requested-rank-name"' : '';
+            html += `<tr>
+                <td ${rankStyle}>${u.u} ${u.requestedRank ? '<br><small>(طالب ترقية)</small>' : ''}</td>
+                <td style="font-size: 0.8rem; color: var(--text-muted);">${u.e || 'N/A'}</td>
+                <td style="font-size: 0.8rem; color: var(--text-muted);">${u.discordId || 'N/A'}</td>
+                <td style="color:var(--primary)">${u.role}</td>
+                <td>
+                    <div style="display:flex; gap:5px; justify-content:center;">
+                        <button class="btn btn-primary btn-sm" onclick="adminAction('${uDoc.id}','promote','${u.requestedRankName || ''}')">ترقية</button>
+                        <button class="btn btn-danger btn-sm" onclick="adminAction('${uDoc.id}','delete')">حذف</button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        html += '</table>';
+        tableArea.innerHTML = html;
+    };
+
+    window.adminAction = (uid, action, extra) => {
+        if(action === 'delete') {
+            showModal("حذف", "حذف هذا المستخدم؟", "confirm", async () => await deleteDoc(doc(db, "users", uid)));
+        } else {
+            const roles = ['User', 'Supporter', 'Management', 'Admin'];
+            let html = '<select id="roleSel">' + roles.map(r => `<option value="${r}">${r}</option>`).join('') + '</select>';
+            if(extra) html = `<p>الرتبة المطلوبة: <b>${extra}</b></p>` + html;
+            showModal("تغيير الرتبة", html, "confirm", async () => {
+                const newRole = document.getElementById('roleSel').value;
+                await updateDoc(doc(db, "users", uid), { role: newRole, requestedRank: false, requestedRankName: deleteField() });
+            });
+        }
+    };
 
     onAuthStateChanged(auth, async (user) => {
         if(user) {
-            onSnapshot(doc(db, "users", user.uid), (snap) => {
-                userData = snap.data();
-                if(!userData) return;
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if(!userDoc.exists()) return signOut(auth);
+            userData = userDoc.data();
 
-                if(userData.pinCode && !pendingAuthUser && document.getElementById('mainContent').classList.contains('hidden')) {
-                    pendingAuthUser = user;
-                    document.getElementById('loginBox').classList.add('hidden');
-                    document.getElementById('pinPage').classList.remove('hidden');
-                    const cont = document.getElementById('pinInputsContainer'); cont.innerHTML = '';
-                    for(let i=0; i<userData.pinCode.length; i++) {
-                        const inp = document.createElement('input'); inp.type='password'; inp.maxLength=1;
-                        inp.onkeyup = (e) => { if(e.target.value && e.target.nextElementSibling) e.target.nextElementSibling.focus(); };
-                        cont.appendChild(inp);
-                    }
-                    return; 
+            if(userData.pinCode && !pendingAuthUser) {
+                pendingAuthUser = user;
+                document.getElementById('authPage').classList.remove('hidden');
+                document.getElementById('loginBox').classList.add('hidden');
+                document.getElementById('pinPage').classList.remove('hidden');
+                const pinCont = document.getElementById('pinInputsContainer'); pinCont.innerHTML = '';
+                for(let i=0; i<userData.pinCode.length; i++) {
+                    const input = document.createElement('input'); input.type='password'; input.maxLength=1;
+                    input.oninput = (e) => { if(e.target.value && input.nextElementSibling) input.nextElementSibling.focus(); };
+                    pinCont.appendChild(input);
                 }
+                return;
+            } else if(!userData.pinCode) {
+                completeLogin(user);
+            }
 
-                document.getElementById('userRankLabel').innerText = userData.role;
-                const pinBtn = document.getElementById('disablePinBtn');
-                if(userData.pinCode) pinBtn.classList.remove('hidden'); else pinBtn.classList.add('hidden');
+            document.getElementById('userRankLabel').innerText = userData.role;
+            document.getElementById('setU').innerText = userData.u;
+            document.getElementById('setE').innerText = userData.e;
+            document.getElementById('setR').innerText = userData.role;
+            document.getElementById('setD').innerText = userData.discordId || 'N/A';
+            
+            const isAdmin = ['Admin', 'Management'].includes(userData.role);
+            if(isAdmin) { 
+                document.getElementById('nav-admin').classList.remove('hidden'); 
+                document.getElementById('addQuestionBtn').classList.remove('hidden'); 
+                document.getElementById('addScenarioBtn').classList.remove('hidden');
+            }
+            if(['Admin', 'Management', 'Supporter'].includes(userData.role)) {
+                document.getElementById('nav-reports').classList.remove('hidden');
+                document.getElementById('nav-activation').classList.remove('hidden');
+            }
 
-                const isUserOnly = userData.role === 'User';
-                document.getElementById('nav-reports').classList.toggle('hidden', isUserOnly);
-                document.getElementById('nav-activation').classList.toggle('hidden', isUserOnly);
-                document.getElementById('nav-admin').classList.toggle('hidden', userData.role !== 'Admin');
-                const isMgmt = ['Admin','Management'].includes(userData.role);
-                document.getElementById('addQuestionBtn').classList.toggle('hidden', !isMgmt);
-                document.getElementById('addScenarioBtn').classList.toggle('hidden', !isMgmt);
-                document.getElementById('setU').innerText = userData.u; 
-                document.getElementById('setE').innerText = userData.e;
-                document.getElementById('setR').innerText = userData.role; 
-                document.getElementById('setD').innerText = userData.discordId || '-';
+            document.getElementById('disablePinBtn').classList.toggle('hidden', !userData.pinCode);
 
-                if(!pendingAuthUser) completeLogin(user);
+            onSnapshot(collection(db, "questions"), (s) => {
+                cachedQuestions = s.docs.map(d => ({id: d.id, ...d.data()}));
+                renderSharedList(cachedQuestions, 'quizContainer');
             });
-
-            onSnapshot(collection(db, "users", user.uid, "counters"), renderCounters);
-            onSnapshot(query(collection(db, "questions"), orderBy("createdAt", "desc")), (s) => {
-                cachedQuestions = s.docs.map(doc => ({id: doc.id, ...doc.data()})); renderSharedList(cachedQuestions, 'quizContainer');
+            onSnapshot(collection(db, "scenarios"), (s) => {
+                cachedScenarios = s.docs.map(d => ({id: d.id, ...d.data()}));
+                renderSharedList(cachedScenarios, 'scenariosContainer');
             });
-            onSnapshot(query(collection(db, "scenarios"), orderBy("createdAt", "desc")), (s) => {
-                cachedScenarios = s.docs.map(doc => ({id: doc.id, ...doc.data()})); renderSharedList(cachedScenarios, 'scenariosContainer');
-            });
-            onSnapshot(doc(db, "system_notices", "current"), (s) => {
+            onSnapshot(collection(db, "users", user.uid, "counters"), (s) => renderCounters(s));
+            onSnapshot(doc(db, "settings", "globalNotice"), (s) => {
                 const bar = document.getElementById('globalNoticeBar');
                 if(s.exists() && s.data().expiry > Date.now()) { bar.innerText = s.data().text; bar.style.display = 'block'; } else bar.style.display = 'none';
             });
@@ -869,7 +887,7 @@
                     let itemsHtml = `<table><tr><th>الاسم</th><th>العدد</th></tr>`;
                     if(d.items && Array.isArray(d.items)) { d.items.forEach(it => { itemsHtml += `<tr><td>${it.name}</td><td>${it.count}</td></tr>`; }); }
                     itemsHtml += `</table>`;
-                    c.innerHTML += `<div class="card" style="font-size:0.8rem; background:#0b0e14; padding:15px;"><b style="color:var(--primary)">📅 ${d.date}</b><div style="margin-top:10px;">${itemsHtml}</div></div>`; 
+                    c.innerHTML += `<div class=\\\"card\\\" style=\\\"font-size:0.8rem; background:#0b0e14; padding:15px;\\\"><b style=\\\"color:var(--primary)\\\">📅 ${d.date}</b><div style=\\\"margin-top:10px;\\\">${itemsHtml}</div></div>`; 
                 });
             });
         } else {
@@ -880,7 +898,8 @@
             document.getElementById('pinPage').classList.add('hidden');
         }
     });
+
 </script>
+
 </body>
 </html>
-
