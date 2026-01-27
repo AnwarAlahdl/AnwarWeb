@@ -306,18 +306,18 @@
 </div>
 
 <script type="module">
-   import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot, addDoc, deleteDoc, orderBy, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
-        authDomain: "anwarcloud-15342.firebaseapp.com",
-        projectId: "anwarcloud-15342",
-        storageBucket: "anwarcloud-15342.firebasestorage.app",
-        messagingSenderId: "193546971936",
-        appId: "1:193546971936:web:496a3c6b01f2a1f3148545"
+         apiKey: "AIzaSyDrrd17evgeh6eaMSnDSUtyVIHpSOJGVzI",
+         authDomain: "anwarcloud-15342.firebaseapp.com",
+         projectId: "anwarcloud-15342",
+         storageBucket: "anwarcloud-15342.firebasestorage.app",
+         messagingSenderId: "193546971936",
+         appId: "1:193546971936:web:496a3c6b01f2a1f3148545",
+         measurementId: "G-JLLM0G7P0H"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -923,5 +923,4 @@ import { getAnalytics } from "firebase/analytics";
 
 </body>
 </html>
-
 
